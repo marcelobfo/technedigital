@@ -6,28 +6,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Topic pool for blog posts - diversified and relevant
+// Topic pool - diversificado com foco em conversão e engajamento
 const topicsByDay: Record<string, string[]> = {
   monday: [
-    "Tendências de Desenvolvimento Web para 2025",
-    "Como criar uma Landing Page de Alta Conversão",
-    "Melhores Práticas de UX/UI Design",
-    "Otimização de Performance Web: Guia Completo",
-    "Arquitetura de Microserviços Moderna"
+    "5 Sacadas que Fizeram Nossos Clientes Venderem 3x Mais Online",
+    "O Erro #1 que Está Matando Suas Conversões (e Como Corrigir Hoje)",
+    "A Tática Simples que Dobrou o Tráfego Orgânico em 60 Dias",
+    "3 Segredos de Landing Pages que Convertem Acima de 15%",
+    "Como Automatizar Seu Marketing Digital em 20 Minutos"
   ],
   wednesday: [
-    "SEO Técnico: Como Ranquear no Google em 2025",
-    "Marketing Digital: Estratégias que Funcionam",
-    "Inteligência Artificial no E-commerce",
-    "Design System: Como Criar e Manter",
-    "Automação de Marketing: Ferramentas Essenciais"
+    "WordPress vs Webflow: Qual Escolher Para Seu Negócio em 2025?",
+    "RD Station vs HubSpot: Testamos as Duas (Veja o Resultado)",
+    "Shopify, Nuvemshop ou WooCommerce: Guia Definitivo para E-commerce",
+    "As 7 Melhores Ferramentas de Automação de Marketing (Testadas por Nós)",
+    "Google Ads vs Facebook Ads: Onde Investir Seu Orçamento?"
   ],
   friday: [
-    "Segurança Web: Protegendo sua Aplicação",
-    "React vs Vue vs Angular: Comparativo 2025",
-    "Como Monetizar seu Blog ou Site",
-    "Ferramentas de Produtividade para Desenvolvedores",
-    "Cloud Computing: AWS, Azure ou Google Cloud?"
+    "Seu Site Não Converte? 4 Erros Que Você Pode Estar Cometendo",
+    "Checklist Gratuito: 15 Pontos para Auditar Seu Site Agora",
+    "Pequeno Negócio: Como Competir com Grandes Empresas Online",
+    "Quanto Custa um Site Profissional? [Calculadora Gratuita]",
+    "7 Sinais de que Seu Site Precisa de Redesign URGENTE"
   ]
 };
 
