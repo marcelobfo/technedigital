@@ -112,12 +112,12 @@ export function Hero() {
                           <Link to={`/portfolio/${project.slug}`} className="block group">
                             <div className="relative aspect-video rounded-2xl overflow-hidden border border-border/50 transition-all duration-500 group-hover:shadow-2xl group-hover:border-primary/50">
                               {/* Badge Case de Sucesso */}
-                              <div className="absolute top-4 left-4 z-10">
-                                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg">
-                                  <Trophy className="w-3 h-3" />
-                                  <span>Case de Sucesso</span>
-                                </div>
-                              </div>
+                  <div className="absolute top-4 left-4 z-10">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg backdrop-blur-sm border border-white/20">
+                      <Trophy className="w-3 h-3" />
+                      <span>Case de Sucesso</span>
+                    </div>
+                  </div>
 
                               {project.cover_image ? (
                                 <img
@@ -130,16 +130,16 @@ export function Hero() {
                                   <Sparkles className="w-16 h-16 text-muted-foreground" />
                                 </div>
                               )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-background/95 via-background/60 to-transparent"></div>
-                            <div className="absolute bottom-0 left-0 right-0 p-8">
-                              <h3 className="text-2xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-black/30"></div>
+                            <div className="absolute bottom-0 left-0 right-0 p-8 backdrop-blur-sm">
+                              <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-primary-foreground transition-colors drop-shadow-lg">
                                 {project.title}
                               </h3>
-                              <p className="text-muted-foreground line-clamp-2">
+                              <p className="text-white/90 line-clamp-2 drop-shadow-md">
                                 {project.description}
                               </p>
                               {project.client_name && (
-                                <p className="text-sm text-muted-foreground mt-2">
+                                <p className="text-sm text-white/80 mt-2 drop-shadow-md">
                                   Cliente: {project.client_name}
                                 </p>
                               )}
@@ -148,7 +148,7 @@ export function Hero() {
                                   {project.technologies.slice(0, 4).map((tech, idx) => (
                                     <span
                                       key={idx}
-                                      className="text-xs px-2 py-1 rounded-full bg-accent/20 text-accent-foreground"
+                                      className="text-xs px-2 py-1 rounded-full bg-white/20 text-white backdrop-blur-sm border border-white/30"
                                     >
                                       {tech}
                                     </span>
