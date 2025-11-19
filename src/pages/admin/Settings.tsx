@@ -5,7 +5,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Calendar, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -70,6 +72,7 @@ export default function Settings() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-automated-posts'] });
       toast({
         title: "Post gerado com sucesso!",
         description: `"${data.title}" foi criado e publicado.`,
@@ -81,6 +84,48 @@ export default function Settings() {
         description: error instanceof Error ? error.message : "Ocorreu um erro ao gerar o post.",
         variant: "destructive",
       });
+    },
+  });
+
+  // Test schedule mutation
+  const testSchedule = useMutation({
+    mutationFn: async (day: string) => {
+      const { data, error } = await supabase.functions.invoke('schedule-blog-posts', {
+        body: { day }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-automated-posts'] });
+      toast({
+        title: "Teste de agendamento executado!",
+        description: data.success ? `Post "${data.topic}" foi gerado com sucesso.` : "O agendamento está desabilitado.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao testar agendamento",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao executar o teste.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Get recent automated posts
+  const { data: recentPosts } = useQuery({
+    queryKey: ['recent-automated-posts'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('title, created_at, status')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (error) throw error;
+      return data;
     },
   });
 
@@ -113,77 +158,167 @@ export default function Settings() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="automation">Ativar Automação</Label>
+          {/* Status Alert */}
+          <Alert>
+            {settings?.automation_enabled ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
+            <AlertDescription>
+              {settings?.automation_enabled ? (
+                <span className="text-sm">
+                  Automação <strong>ativa</strong>. Posts serão gerados automaticamente às segundas, quartas e sextas-feiras.
+                </span>
+              ) : (
+                <span className="text-sm">
+                  Automação <strong>desativada</strong>. Ative para começar a gerar posts automaticamente.
+                </span>
+              )}
+            </AlertDescription>
+          </Alert>
+
+          {/* Toggle de Automação */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Label htmlFor="automation" className="text-base font-semibold">Ativar Automação</Label>
+                <Badge variant={settings?.automation_enabled ? "default" : "secondary"}>
+                  {settings?.automation_enabled ? 'Ativo' : 'Desativado'}
+                </Badge>
+              </div>
               <p className="text-sm text-muted-foreground">
-                Gera automaticamente 3 posts por semana (segunda, quarta e sexta às 9h UTC)
+                Posts serão gerados automaticamente {settings?.posts_per_week || 3}x por semana
               </p>
             </div>
             <Switch
               id="automation"
-              checked={settings?.automation_enabled ?? false}
+              checked={settings?.automation_enabled || false}
               onCheckedChange={handleAutomationToggle}
               disabled={updateAutomation.isPending}
             />
           </div>
 
-          <div className="border-t pt-6">
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium mb-1">Geração Manual</h4>
-                <p className="text-sm text-muted-foreground">
-                  Gere um post imediatamente, sem esperar pelos horários agendados
-                </p>
+          {/* Próximas Execuções */}
+          {settings?.automation_enabled && (
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Próximas Execuções
+              </h4>
+              <div className="grid gap-2">
+                {['Segunda-feira', 'Quarta-feira', 'Sexta-feira'].map((day) => (
+                  <div key={day} className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{day}</span>
+                    </div>
+                    <Badge variant="outline">Agendado</Badge>
+                  </div>
+                ))}
               </div>
-              <Button
-                onClick={() => generatePost.mutate()}
-                disabled={generatePost.isPending}
-                className="w-full sm:w-auto"
-              >
-                {generatePost.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Gerando post...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Gerar Post Agora
-                  </>
-                )}
-              </Button>
             </div>
-          </div>
+          )}
 
-          <div className="rounded-lg border p-4 space-y-2">
-            <h4 className="font-medium">Status da Automação</h4>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Estado atual:</p>
-                <p className="font-medium">
-                  {settings?.automation_enabled ? (
-                    <span className="text-green-600">Ativa</span>
+          {/* Ações Manuais */}
+          <div className="border-t pt-6 space-y-4">
+            <div>
+              <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                <Sparkles className="h-4 w-4" />
+                Ações Manuais
+              </h4>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button
+                  onClick={() => generatePost.mutate()}
+                  disabled={generatePost.isPending}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {generatePost.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Gerando...
+                    </>
                   ) : (
-                    <span className="text-red-600">Desativada</span>
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Gerar Post Agora
+                    </>
                   )}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Posts por semana:</p>
-                <p className="font-medium">{settings?.posts_per_week ?? 3}</p>
+                </Button>
+                
+                <Button
+                  onClick={() => testSchedule.mutate('monday')}
+                  disabled={testSchedule.isPending}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {testSchedule.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Testando...
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="mr-2 h-4 w-4" />
+                      Testar Agendamento
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
-          </div>
 
-          <div className="rounded-lg bg-muted p-4 space-y-2">
-            <h4 className="font-medium text-sm">Como funciona</h4>
-            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-              <li>Posts são gerados automaticamente 3x por semana</li>
-              <li>Segunda-feira, quarta-feira e sexta-feira às 9h (UTC)</li>
-              <li>Conteúdo e imagens criados por IA otimizada para SEO</li>
-              <li>Posts são publicados automaticamente</li>
-            </ul>
+            {/* Posts Recentes */}
+            {recentPosts && recentPosts.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium">Posts Recentes</h4>
+                <div className="space-y-2">
+                  {recentPosts.map((post, index) => (
+                    <div key={`${post.title}-${index}`} className="flex items-center justify-between p-3 border rounded-lg text-sm">
+                      <div className="flex-1 truncate">
+                        <p className="font-medium truncate">{post.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(post.created_at).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </p>
+                      </div>
+                      <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
+                        {post.status === 'published' && <CheckCircle2 className="h-3 w-3 mr-1" />}
+                        {post.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Informações */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium">Como funciona</h4>
+              <ul className="text-sm text-muted-foreground space-y-1.5 pl-4">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Posts são gerados automaticamente às segundas, quartas e sextas-feiras</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Cada post é criado com conteúdo único e otimizado para SEO</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Imagens de capa são geradas automaticamente com IA</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Posts são publicados imediatamente após a geração</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </CardContent>
       </Card>
