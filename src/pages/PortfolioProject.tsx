@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ImageLightbox } from '@/components/ImageLightbox';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Trophy } from 'lucide-react';
 
 export default function PortfolioProject() {
   const { slug } = useParams<{ slug: string }>();
@@ -133,9 +133,19 @@ export default function PortfolioProject() {
           <section className="py-12">
             <div className="container max-w-4xl">
               <div 
-                className="aspect-video rounded-lg overflow-hidden shadow-2xl cursor-pointer group"
+                className="aspect-video rounded-lg overflow-hidden shadow-2xl cursor-pointer group relative"
                 onClick={() => handleImageClick(0)}
               >
+                {/* Badge Case de Sucesso */}
+                {project.is_featured && (
+                  <div className="absolute top-4 left-4 z-10">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 text-accent text-xs font-semibold shadow-lg backdrop-blur-sm border border-accent/20">
+                      <Trophy className="w-3 h-3" />
+                      <span>Case de Sucesso</span>
+                    </div>
+                  </div>
+                )}
+                
                 <img 
                   src={project.cover_image} 
                   alt={project.title}

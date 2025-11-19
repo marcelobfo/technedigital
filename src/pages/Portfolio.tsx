@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -78,7 +78,17 @@ export default function Portfolio() {
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
                     <Link to={`/portfolio/${project.slug}`}>
-                      <div className="aspect-video overflow-hidden">
+                      <div className="aspect-video overflow-hidden relative">
+                        {/* Badge Case de Sucesso */}
+                        {project.is_featured && (
+                          <div className="absolute top-4 left-4 z-10">
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 text-accent text-xs font-semibold shadow-lg backdrop-blur-sm border border-accent/20">
+                              <Trophy className="w-3 h-3" />
+                              <span>Case de Sucesso</span>
+                            </div>
+                          </div>
+                        )}
+                        
                         {project.cover_image ? (
                           <img 
                             src={project.cover_image} 
