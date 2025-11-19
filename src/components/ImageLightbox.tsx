@@ -56,7 +56,7 @@ export function ImageLightbox({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-background/95 backdrop-blur-sm border-border">
-        <div className="relative w-full h-full flex flex-col">
+        <div className="relative w-full h-[95vh] flex flex-col">
           {/* Header with close button and counter */}
           <div className="absolute top-4 right-4 z-50 flex items-center gap-4">
             {images.length > 1 && (
@@ -77,12 +77,12 @@ export function ImageLightbox({
           </div>
 
           {/* Main image area with scroll */}
-          <ScrollArea className="flex-1 w-full h-full">
-            <div className="flex items-center justify-center min-h-[95vh] p-8">
+          <ScrollArea className="w-full h-full">
+            <div className="flex justify-center p-8">
               <img
                 src={images[currentIndex]}
                 alt={`${altPrefix} ${currentIndex + 1}`}
-                className="max-w-full h-auto object-contain"
+                className="w-auto max-w-full"
               />
             </div>
           </ScrollArea>
