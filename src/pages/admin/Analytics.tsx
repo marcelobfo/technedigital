@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Users, Eye, MousePointer, TrendingUp } from 'lucide-react';
+import { Users, Eye, MousePointer, TrendingUp, Trash2 } from 'lucide-react';
 
 interface AnalyticsData {
   totalVisits: number;
@@ -17,7 +20,9 @@ interface AnalyticsData {
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
 
 export default function Analytics() {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [clearing, setClearing] = useState(false);
   const [period, setPeriod] = useState('7');
   const [analytics, setAnalytics] = useState<AnalyticsData>({
     totalVisits: 0,
@@ -108,6 +113,35 @@ export default function Analytics() {
       console.error('Erro ao carregar analytics:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleClearAnalytics = async () => {
+    setClearing(true);
+    try {
+      const { error } = await supabase
+        .from('site_analytics')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all records
+
+      if (error) throw error;
+
+      toast({
+        title: "Dados limpos com sucesso",
+        description: "Todos os dados de analytics foram removidos.",
+      });
+
+      // Reload analytics
+      await fetchAnalytics();
+    } catch (error) {
+      console.error('Erro ao limpar analytics:', error);
+      toast({
+        title: "Erro ao limpar dados",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao limpar os dados.",
+        variant: "destructive",
+      });
+    } finally {
+      setClearing(false);
     }
   };
 

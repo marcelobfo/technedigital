@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 
 export default function Settings() {
   const { toast } = useToast();
@@ -57,6 +58,32 @@ export default function Settings() {
     },
   });
 
+  // Manual post generation mutation
+  const generatePost = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('generate-blog-post', {
+        body: { topic: 'Marketing Digital e Tecnologia' }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
+      toast({
+        title: "Post gerado com sucesso!",
+        description: `"${data.title}" foi criado e publicado.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao gerar post",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao gerar o post.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleAutomationToggle = (checked: boolean) => {
     updateAutomation.mutate(checked);
   };
@@ -99,6 +126,34 @@ export default function Settings() {
               onCheckedChange={handleAutomationToggle}
               disabled={updateAutomation.isPending}
             />
+          </div>
+
+          <div className="border-t pt-6">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-1">Geração Manual</h4>
+                <p className="text-sm text-muted-foreground">
+                  Gere um post imediatamente, sem esperar pelos horários agendados
+                </p>
+              </div>
+              <Button
+                onClick={() => generatePost.mutate()}
+                disabled={generatePost.isPending}
+                className="w-full sm:w-auto"
+              >
+                {generatePost.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Gerando post...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Gerar Post Agora
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
           <div className="rounded-lg border p-4 space-y-2">
