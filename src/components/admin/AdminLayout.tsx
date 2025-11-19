@@ -16,7 +16,8 @@ import {
   Mail,
   BarChart3,
   Globe,
-  MessageCircle
+  MessageCircle,
+  DollarSign
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
@@ -28,6 +29,7 @@ const navItems = [
   { icon: MessageSquare, label: 'Depoimentos', path: '/admin/testimonials' },
   { icon: Users, label: 'Leads', path: '/admin/leads' },
   { icon: Receipt, label: 'Propostas', path: '/admin/proposals' },
+  { icon: DollarSign, label: 'Financeiro', path: '/admin/financial' },
   { icon: Mail, label: 'Newsletter', path: '/admin/newsletter' },
   { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
   { icon: Users, label: 'Usuários', path: '/admin/users' },
