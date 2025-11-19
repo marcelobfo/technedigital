@@ -11,7 +11,23 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2, Plus, X, Globe, Search, TrendingUp, Code, Palette, Smartphone, Mail, BarChart, MessageSquare, Zap, Shield, Settings } from "lucide-react";
+
+// Available icons for services
+const availableIcons = [
+  { name: "Globe", component: Globe, label: "Globo (Web/Internet)" },
+  { name: "Search", component: Search, label: "Busca/Pesquisa (SEO)" },
+  { name: "TrendingUp", component: TrendingUp, label: "Crescimento/Analytics" },
+  { name: "Code", component: Code, label: "Código/Desenvolvimento" },
+  { name: "Palette", component: Palette, label: "Design/Criatividade" },
+  { name: "Smartphone", component: Smartphone, label: "Mobile/Apps" },
+  { name: "Mail", component: Mail, label: "Email Marketing" },
+  { name: "BarChart", component: BarChart, label: "Dados/Estatísticas" },
+  { name: "MessageSquare", component: MessageSquare, label: "Comunicação/Chat" },
+  { name: "Zap", component: Zap, label: "Velocidade/Performance" },
+  { name: "Shield", component: Shield, label: "Segurança/Proteção" },
+  { name: "Settings", component: Settings, label: "Configuração/Gestão" },
+];
 
 const formSchema = z.object({
   title: z.string().min(3, "Título deve ter no mínimo 3 caracteres"),
@@ -169,8 +185,28 @@ export default function ServiceForm({ service, onSuccess }: ServiceFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="icon">Ícone (emoji ou texto)</Label>
-        <Input id="icon" {...register("icon")} placeholder="🎨" />
+        <Label htmlFor="icon">Ícone</Label>
+        <Select
+          value={watch("icon") || ""}
+          onValueChange={(value) => setValue("icon", value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione um ícone" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableIcons.map((icon) => {
+              const IconComp = icon.component;
+              return (
+                <SelectItem key={icon.name} value={icon.name}>
+                  <div className="flex items-center gap-2">
+                    <IconComp className="h-4 w-4" />
+                    <span>{icon.label}</span>
+                  </div>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">

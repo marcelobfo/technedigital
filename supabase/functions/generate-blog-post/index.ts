@@ -100,7 +100,7 @@ Retorne APENAS um JSON válido com esta estrutura exata:
 
     // Step 2: Generate cover image with AI
     console.log('Step 2: Generating cover image with AI...');
-    const imagePrompt = `${blogContent.imagePrompt}. Professional blog cover image, 16:9 aspect ratio, vibrant colors, modern design, high quality.`;
+    const imagePrompt = `${blogContent.imagePrompt}. IMPORTANTE: Criar imagem SEM QUALQUER TEXTO. Imagem conceitual e visual apenas, profissional para capa de blog, proporção 16:9, cores vibrantes, design moderno e clean, apenas elementos visuais e ilustrações, alta qualidade, estilo profissional.`;
     
     const imageResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
