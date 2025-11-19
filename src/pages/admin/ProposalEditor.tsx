@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ArrowLeft, Save, Send, Check, X, Plus, Trash2, GripVertical } from "lucide-react";
+import { ArrowLeft, Save, Send, Check, X, Plus, Trash2, GripVertical, Mail, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
@@ -47,6 +47,7 @@ export default function ProposalEditor() {
   const isEditing = Boolean(id);
 
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [proposal, setProposal] = useState<Proposal>({
     lead_id: "",
@@ -153,7 +154,7 @@ export default function ProposalEditor() {
     setItems(itemsWithOrder);
   };
 
-  const saveProposal = async (newStatus?: "draft" | "sent" | "accepted" | "rejected") => {
+  const handleSave = async (newStatus?: "draft" | "sent" | "accepted" | "rejected") => {
     if (!proposal.lead_id) {
       toast.error("Selecione um lead");
       return;
@@ -240,6 +241,86 @@ export default function ProposalEditor() {
     }
   };
 
+  const handleSendEmail = async () => {
+    if (!proposal.id) {
+      toast.error("Salve a proposta antes de enviar por email");
+      return;
+    }
+
+    if (!proposal.lead_id) {
+      toast.error("Selecione um lead antes de enviar");
+      return;
+    }
+
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-proposal-email', {
+        body: { proposal_id: proposal.id },
+      });
+
+      if (error) throw error;
+
+      toast.success("Proposta enviada por email com sucesso!");
+      fetchProposal();
+    } catch (error) {
+      console.error("Erro ao enviar proposta por email:", error);
+      toast.error("Erro ao enviar proposta por email");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleSendWhatsApp = async () => {
+    if (!proposal.id) {
+      toast.error("Salve a proposta antes de enviar pelo WhatsApp");
+      return;
+    }
+
+    if (!proposal.lead_id) {
+      toast.error("Selecione um lead antes de enviar");
+      return;
+    }
+
+    // Buscar telefone do lead
+    const lead = leads.find(l => l.id === proposal.lead_id);
+    if (!lead) {
+      toast.error("Lead não encontrado");
+      return;
+    }
+
+    // Buscar dados completos do lead com telefone
+    const { data: leadData, error: leadError } = await supabase
+      .from('leads')
+      .select('phone')
+      .eq('id', proposal.lead_id)
+      .single();
+
+    if (leadError || !leadData?.phone) {
+      toast.error("Lead não possui telefone cadastrado");
+      return;
+    }
+
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-whatsapp-proposal', {
+        body: { 
+          proposal_id: proposal.id,
+          phone_number: leadData.phone,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success("Proposta enviada pelo WhatsApp com sucesso!");
+      fetchProposal();
+    } catch (error) {
+      console.error("Erro ao enviar proposta pelo WhatsApp:", error);
+      toast.error("Erro ao enviar proposta pelo WhatsApp");
+    } finally {
+      setSending(false);
+    }
+  };
+
   const totalAmount = items.reduce((sum, item) => sum + item.subtotal, 0);
   const discountValue = proposal.discount_percentage > 0
     ? totalAmount * (proposal.discount_percentage / 100)
@@ -263,11 +344,11 @@ export default function ProposalEditor() {
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => saveProposal("draft")} disabled={loading}>
+          <Button variant="outline" onClick={() => handleSave("draft")} disabled={loading}>
             <Save className="mr-2 h-4 w-4" />
             Salvar Rascunho
           </Button>
-          <Button onClick={() => saveProposal("sent")} disabled={loading}>
+          <Button onClick={() => handleSave("sent")} disabled={loading}>
             <Send className="mr-2 h-4 w-4" />
             Enviar Proposta
           </Button>
@@ -453,6 +534,40 @@ export default function ProposalEditor() {
           </div>
         </div>
       </Card>
+
+      <div className="flex gap-3 justify-between">
+        <Button variant="outline" onClick={() => navigate("/admin/proposals")}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Voltar
+        </Button>
+
+        <div className="flex gap-3">
+          {isEditing && proposal.id && (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleSendEmail}
+                disabled={sending || loading}
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                {sending ? "Enviando..." : "Enviar por Email"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleSendWhatsApp}
+                disabled={sending || loading}
+              >
+                <MessageCircle className="mr-2 h-4 w-4" />
+                {sending ? "Enviando..." : "Enviar pelo WhatsApp"}
+              </Button>
+            </>
+          )}
+          <Button onClick={() => handleSave()} disabled={loading}>
+            <Save className="mr-2 h-4 w-4" />
+            {loading ? "Salvando..." : "Salvar Proposta"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

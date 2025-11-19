@@ -13,7 +13,10 @@ import {
   Menu,
   Receipt,
   Wrench,
-  Mail
+  Mail,
+  BarChart3,
+  Globe,
+  MessageCircle
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
@@ -26,7 +29,10 @@ const navItems = [
   { icon: Users, label: 'Leads', path: '/admin/leads' },
   { icon: Receipt, label: 'Propostas', path: '/admin/proposals' },
   { icon: Mail, label: 'Newsletter', path: '/admin/newsletter' },
+  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
   { icon: Users, label: 'Usuários', path: '/admin/users' },
+  { icon: Globe, label: 'Configurações do Site', path: '/admin/site-settings' },
+  { icon: MessageCircle, label: 'WhatsApp', path: '/admin/whatsapp' },
   { icon: Wrench, label: 'Configurações', path: '/admin/settings' },
 ];
 

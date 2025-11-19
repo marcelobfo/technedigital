@@ -421,6 +421,10 @@ export type Database = {
           lead_id: string
           notes: string | null
           proposal_number: string
+          sent_at: string | null
+          sent_to_email: string | null
+          sent_to_whatsapp: string | null
+          sent_via: string | null
           status: Database["public"]["Enums"]["proposal_status"]
           terms_and_conditions: string | null
           total_amount: number
@@ -437,6 +441,10 @@ export type Database = {
           lead_id: string
           notes?: string | null
           proposal_number: string
+          sent_at?: string | null
+          sent_to_email?: string | null
+          sent_to_whatsapp?: string | null
+          sent_via?: string | null
           status?: Database["public"]["Enums"]["proposal_status"]
           terms_and_conditions?: string | null
           total_amount?: number
@@ -453,6 +461,10 @@ export type Database = {
           lead_id?: string
           notes?: string | null
           proposal_number?: string
+          sent_at?: string | null
+          sent_to_email?: string | null
+          sent_to_whatsapp?: string | null
+          sent_via?: string | null
           status?: Database["public"]["Enums"]["proposal_status"]
           terms_and_conditions?: string | null
           total_amount?: number
@@ -544,6 +556,89 @@ export type Database = {
         }
         Relationships: []
       }
+      site_analytics: {
+        Row: {
+          created_at: string | null
+          device_type: string | null
+          id: string
+          page_path: string
+          referrer: string | null
+          session_id: string
+          user_agent: string | null
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          page_path: string
+          referrer?: string | null
+          session_id: string
+          user_agent?: string | null
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          page_path?: string
+          referrer?: string | null
+          session_id?: string
+          user_agent?: string | null
+          visitor_id?: string
+        }
+        Relationships: []
+      }
+      site_settings: {
+        Row: {
+          custom_body_scripts: string | null
+          custom_head_scripts: string | null
+          facebook_pixel_id: string | null
+          google_analytics_id: string | null
+          id: string
+          meta_description: string | null
+          meta_keywords: string[] | null
+          meta_title: string | null
+          tracking_pixels: Json | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          custom_body_scripts?: string | null
+          custom_head_scripts?: string | null
+          facebook_pixel_id?: string | null
+          google_analytics_id?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          meta_title?: string | null
+          tracking_pixels?: Json | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          custom_body_scripts?: string | null
+          custom_head_scripts?: string | null
+          facebook_pixel_id?: string | null
+          google_analytics_id?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_keywords?: string[] | null
+          meta_title?: string | null
+          tracking_pixels?: Json | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       testimonials: {
         Row: {
           client_company: string | null
@@ -606,6 +701,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      whatsapp_settings: {
+        Row: {
+          api_token: string
+          api_url: string
+          id: string
+          instance_name: string
+          is_active: boolean | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          api_token: string
+          api_url: string
+          id?: string
+          instance_name: string
+          is_active?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          api_token?: string
+          api_url?: string
+          id?: string
+          instance_name?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
