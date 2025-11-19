@@ -25,6 +25,7 @@ import Newsletter from "@/pages/admin/Newsletter";
 import SiteSettings from "@/pages/admin/SiteSettings";
 import WhatsAppSettings from "@/pages/admin/WhatsAppSettings";
 import Analytics from "@/pages/admin/Analytics";
+import Financial from "@/pages/admin/Financial";
 
 export const AppContent = () => {
   usePageTracking(); // ✅ Agora está dentro do Router context
@@ -52,6 +53,7 @@ export const AppContent = () => {
         <Route path="proposals" element={<Proposals />} />
         <Route path="proposals/new" element={<ProposalEditor />} />
         <Route path="proposals/:id" element={<ProposalEditor />} />
+        <Route path="financial" element={<Financial />} />
         <Route path="newsletter" element={<Newsletter />} />
         <Route path="analytics" element={<Analytics />} />
         <Route path="site-settings" element={<SiteSettings />} />
