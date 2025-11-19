@@ -37,9 +37,9 @@ export default function WhatsAppSettings() {
       const { data, error } = await supabase
         .from('whatsapp_settings')
         .select('*')
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
       
       if (data) {
         setSettings(data);
@@ -65,6 +65,29 @@ export default function WhatsAppSettings() {
       if (!user) {
         toast.error('Usuário não autenticado');
         return;
+      }
+
+      // Verificar se o perfil existe, criar se necessário
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!profile) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([{
+            id: user.id,
+            full_name: user.user_metadata?.full_name || 'Usuário',
+            avatar_url: user.user_metadata?.avatar_url || null
+          }]);
+
+        if (profileError) {
+          console.error('Erro ao criar perfil:', profileError);
+          toast.error('Erro ao criar perfil do usuário');
+          return;
+        }
       }
 
       const dataToSave = {
