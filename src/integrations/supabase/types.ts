@@ -761,6 +761,7 @@ export type Database = {
         | "email_sent"
         | "call"
         | "meeting"
+        | "proposal_sent"
       app_role: "admin" | "editor" | "viewer"
       content_status: "active" | "inactive"
       financial_type: "income" | "expense"
@@ -902,7 +903,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      activity_type: ["note", "status_change", "email_sent", "call", "meeting"],
+      activity_type: [
+        "note",
+        "status_change",
+        "email_sent",
+        "call",
+        "meeting",
+        "proposal_sent",
+      ],
       app_role: ["admin", "editor", "viewer"],
       content_status: ["active", "inactive"],
       financial_type: ["income", "expense"],

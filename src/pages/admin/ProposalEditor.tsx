@@ -260,7 +260,13 @@ export default function ProposalEditor() {
 
       if (error) throw error;
 
-      toast.success("Proposta enviada por email com sucesso!");
+      toast.success("Proposta enviada por email!", {
+        description: "O lead foi notificado e a atividade foi registrada.",
+        action: {
+          label: "Ver Lead",
+          onClick: () => navigate("/admin/leads")
+        }
+      });
       fetchProposal();
     } catch (error) {
       console.error("Erro ao enviar proposta por email:", error);
@@ -311,7 +317,13 @@ export default function ProposalEditor() {
 
       if (error) throw error;
 
-      toast.success("Proposta enviada pelo WhatsApp com sucesso!");
+      toast.success("Proposta enviada via WhatsApp!", {
+        description: "O lead foi notificado e a atividade foi registrada.",
+        action: {
+          label: "Ver Lead",
+          onClick: () => navigate("/admin/leads")
+        }
+      });
       fetchProposal();
     } catch (error) {
       console.error("Erro ao enviar proposta pelo WhatsApp:", error);

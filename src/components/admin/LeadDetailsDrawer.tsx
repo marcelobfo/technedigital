@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Mail, Phone, MessageSquare, Clock, FileText, Plus } from "lucide-react";
+import { Calendar, Mail, Phone, MessageSquare, Clock, FileText, Plus, Eye, Send, CheckCircle, Circle } from "lucide-react";
 
 type Lead = {
   id: string;
@@ -90,7 +90,7 @@ export function LeadDetailsDrawer({ lead, onClose, onUpdate }: LeadDetailsDrawer
     try {
       const { data, error } = await supabase
         .from("proposals")
-        .select("id, proposal_number, status, final_amount, created_at")
+        .select("id, proposal_number, status, final_amount, created_at, sent_at, sent_via")
         .eq("lead_id", lead.id)
         .order("created_at", { ascending: false });
 
@@ -258,32 +258,53 @@ export function LeadDetailsDrawer({ lead, onClose, onUpdate }: LeadDetailsDrawer
                   {proposals.map((proposal) => (
                     <div
                       key={proposal.id}
-                      className="p-3 border rounded-lg cursor-pointer hover:bg-accent transition-colors"
-                      onClick={() => {
-                        navigate(`/admin/proposals/${proposal.id}`);
-                        onClose();
-                      }}
+                      className="p-3 border rounded-lg hover:bg-accent transition-colors"
                     >
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium">{proposal.proposal_number}</span>
-                        <Badge variant={
-                          proposal.status === "accepted" ? "outline" :
-                          proposal.status === "rejected" ? "destructive" :
-                          proposal.status === "sent" ? "default" : "secondary"
-                        }>
-                          {proposal.status === "draft" ? "Rascunho" :
-                           proposal.status === "sent" ? "Enviada" :
-                           proposal.status === "accepted" ? "Aceita" : "Rejeitada"}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={
+                            proposal.status === "accepted" ? "outline" :
+                            proposal.status === "rejected" ? "destructive" :
+                            proposal.status === "sent" ? "default" : "secondary"
+                          }>
+                            {proposal.status === "draft" ? "Rascunho" :
+                             proposal.status === "sent" ? "Enviada" :
+                             proposal.status === "accepted" ? "Aceita" : "Rejeitada"}
+                          </Badge>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              navigate(`/admin/proposals/edit/${proposal.id}`);
+                              onClose();
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>
-                          {new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(proposal.final_amount)}
-                        </span>
-                        <span>{new Date(proposal.created_at).toLocaleDateString()}</span>
+                      <div className="text-sm space-y-1">
+                        <div className="flex items-center justify-between text-muted-foreground">
+                          <span>Valor:</span>
+                          <span className="font-medium">
+                            {new Intl.NumberFormat("pt-BR", {
+                              style: "currency",
+                              currency: "BRL",
+                            }).format(proposal.final_amount)}
+                          </span>
+                        </div>
+                        {proposal.sent_at && (
+                          <div className="text-xs text-muted-foreground">
+                            Enviado em: {new Date(proposal.sent_at).toLocaleDateString('pt-BR')}
+                            {proposal.sent_via && ` via ${proposal.sent_via}`}
+                          </div>
+                        )}
+                        {!proposal.sent_at && (
+                          <div className="text-xs text-muted-foreground">
+                            Criado em: {new Date(proposal.created_at).toLocaleDateString('pt-BR')}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -336,17 +357,36 @@ export function LeadDetailsDrawer({ lead, onClose, onUpdate }: LeadDetailsDrawer
                 <p className="text-sm text-muted-foreground">Nenhuma atividade registrada</p>
               ) : (
                 <div className="space-y-3">
-                  {activities.map((activity) => (
-                    <div key={activity.id} className="flex gap-3 text-sm">
-                      <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-primary"></div>
-                      <div className="flex-1 space-y-1">
-                        <p className="text-muted-foreground">{activity.description}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(activity.created_at).toLocaleString()}
-                        </p>
+                  {activities.map((activity) => {
+                    const getActivityIcon = () => {
+                      switch (activity.activity_type) {
+                        case 'note':
+                          return <MessageSquare className="h-4 w-4 text-muted-foreground" />;
+                        case 'status_change':
+                          return <CheckCircle className="h-4 w-4 text-muted-foreground" />;
+                        case 'email_sent':
+                          return <Mail className="h-4 w-4 text-muted-foreground" />;
+                        case 'proposal_sent':
+                          return <Send className="h-4 w-4 text-blue-500" />;
+                        default:
+                          return <Circle className="h-4 w-4 text-muted-foreground" />;
+                      }
+                    };
+
+                    return (
+                      <div key={activity.id} className="flex gap-3 text-sm">
+                        <div className="flex-shrink-0 mt-0.5">
+                          {getActivityIcon()}
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <p className="text-muted-foreground">{activity.description}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(activity.created_at).toLocaleString()}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
