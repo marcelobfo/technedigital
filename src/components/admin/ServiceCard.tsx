@@ -52,10 +52,10 @@ export default function ServiceCard({ service, onEdit, onDelete }: ServiceCardPr
           <div className="mt-4">
             <p className="text-xs font-medium text-muted-foreground mb-2">Recursos:</p>
             <ul className="space-y-1">
-              {service.features.slice(0, 3).map((feature: string, index: number) => (
+              {service.features.slice(0, 3).map((feature: any, index: number) => (
                 <li key={index} className="text-xs text-muted-foreground flex items-start">
                   <span className="mr-2">•</span>
-                  <span className="line-clamp-1">{feature}</span>
+                  <span className="line-clamp-1">{typeof feature === 'string' ? feature : feature.text}</span>
                 </li>
               ))}
             </ul>
