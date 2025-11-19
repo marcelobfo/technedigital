@@ -55,10 +55,42 @@ Crie um artigo de blog completo sobre "${topic}" seguindo estas diretrizes:
    - Final: "Pronto para transformar seu site em máquina de vendas? Entre em contato!"
    - Pode incluir: "Baixe nosso checklist gratuito", "Agende uma consultoria", etc.
    
-   SEO (otimizar naturalmente):
+   LINKS ESTRATÉGICOS (incluir 3-5 links ao longo do conteúdo):
+   
+   LINKS INTERNOS (2-3 obrigatórios):
+   Use anchor text natural e relevante linkando para:
+   - Blog: <a href="/blog">nosso blog</a>
+   - Serviços: <a href="/services">nossos serviços</a>
+   - Portfólio: <a href="/portfolio">portfólio de projetos</a>
+   - Sobre: <a href="/about">sobre nós</a>
+   - Contato: <a href="/contact">entre em contato</a>
+   
+   Exemplos de uso natural:
+   - "Confira nosso [portfólio de projetos](/portfolio) para ver casos reais"
+   - "Descubra como [nossos serviços](/services) podem ajudar você"
+   - "Leia mais no [nosso blog](/blog) sobre estratégias digitais"
+   
+   LINKS EXTERNOS (2-3 recomendados para autoridade):
+   Linke para sites de referência como:
+   - Ferramentas: Google Analytics, Search Console, HubSpot, SEMrush
+   - Estudos: Neil Patel, Moz, Backlinko, Content Marketing Institute
+   - Plataformas: WordPress.org, Shopify, WooCommerce
+   - Docs oficiais: developers.google.com, react.dev, etc.
+   
+   Use target="_blank" e rel="noopener noreferrer" para links externos:
+   <a href="https://blog.hubspot.com" target="_blank" rel="noopener noreferrer">HubSpot</a>
+   
+   REGRAS:
+   - Links internos: sem target blank (navegação no mesmo site)
+   - Links externos: target="_blank" rel="noopener noreferrer" (abre em nova aba)
+   - Anchor text natural (não use "clique aqui", use texto descritivo)
+   - Espalhe os links ao longo do conteúdo (não todos no final)
+   - Links devem ser relevantes ao contexto da frase
+   
+   SEO:
    - Palavra-chave nos primeiros 100 palavras
    - Variações da palavra-chave nos <h2>
-   - Links internos sugeridos (usar #)
+   - 3-5 links no total (internos + externos)
    - Meta description otimizada
 
 4. CATEGORIA: Escolha entre: Marketing, Tecnologia, Design, Negócios, E-commerce, Ferramentas
@@ -71,6 +103,8 @@ CRÍTICO:
 - Use linguagem CLARA e DIRETA
 - Foque em RESULTADOS e BENEFÍCIOS, não só teoria
 - Inclua pelo menos 2 CTAs para contato/conversão
+- Inclua 2-3 links internos (/blog, /services, /portfolio, /contact)
+- Inclua 2-3 links externos para sites de autoridade (com target="_blank")
 - Crie senso de urgência ou exclusividade quando apropriado
 - NUNCA use jargões desnecessários
 
