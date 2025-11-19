@@ -23,6 +23,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { proposal_id, phone_number }: WhatsAppProposalRequest = await req.json();
 
+    console.log("Received request for proposal:", proposal_id, "to phone:", phone_number);
+
+    // Formatar número de telefone para padrão internacional (sem + e com código do país)
+    let formattedPhone = phone_number.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
+    
+    // Se não tiver código do país (55 para Brasil), adicionar
+    if (!formattedPhone.startsWith('55') && formattedPhone.length === 11) {
+      formattedPhone = '55' + formattedPhone;
+    }
+    
+    console.log("Formatted phone:", formattedPhone);
+
     // Buscar configurações do WhatsApp
     const { data: whatsappSettings, error: settingsError } = await supabase
       .from("whatsapp_settings")
@@ -92,20 +104,27 @@ const handler = async (req: Request): Promise<Response> => {
     // Enviar mensagem via WhatsApp API
     const whatsappUrl = `${whatsappSettings.api_url}/message/sendText/${whatsappSettings.instance_name}`;
     
+    console.log("Sending WhatsApp message to:", phone_number);
+    console.log("Using instance:", whatsappSettings.instance_name);
+    console.log("API URL:", whatsappUrl);
+    
     const whatsappResponse = await fetch(whatsappUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${whatsappSettings.api_token}`,
+        "apikey": whatsappSettings.api_token,
       },
       body: JSON.stringify({
-        number: phone_number,
+        number: formattedPhone,
         text: message,
       }),
     });
 
+    console.log("WhatsApp response status:", whatsappResponse.status);
+    
     if (!whatsappResponse.ok) {
       const errorData = await whatsappResponse.text();
+      console.error("WhatsApp API error:", errorData);
       throw new Error(`Erro ao enviar mensagem: ${errorData}`);
     }
 
@@ -118,7 +137,7 @@ const handler = async (req: Request): Promise<Response> => {
       .update({
         sent_at: new Date().toISOString(),
         sent_via: proposal.sent_via ? `${proposal.sent_via},whatsapp` : "whatsapp",
-        sent_to_whatsapp: phone_number,
+        sent_to_whatsapp: formattedPhone,
         status: proposal.status === "draft" ? "sent" : proposal.status,
       })
       .eq("id", proposal_id);
@@ -138,7 +157,7 @@ const handler = async (req: Request): Promise<Response> => {
         lead_id: proposal.lead_id,
         user_id: userId,
         activity_type: "proposal_sent",
-        description: `Proposta comercial #${proposal.proposal_number} enviada via WhatsApp para ${phone_number}`,
+        description: `Proposta comercial #${proposal.proposal_number} enviada via WhatsApp para ${formattedPhone}`,
       });
 
       // Update lead status
