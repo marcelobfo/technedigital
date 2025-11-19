@@ -161,6 +161,31 @@ const handler = async (req: Request): Promise<Response> => {
       })
       .eq("id", proposal_id);
 
+    // Get authenticated user
+    const authHeader = req.headers.get("authorization");
+    let userId = null;
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user } } = await supabase.auth.getUser(token);
+      userId = user?.id;
+    }
+
+    // Log activity in lead
+    if (userId) {
+      await supabase.from("lead_activities").insert({
+        lead_id: proposal.lead_id,
+        user_id: userId,
+        activity_type: "proposal_sent",
+        description: `Proposta comercial #${proposal.proposal_number} enviada por email para ${proposal.leads.email}`,
+      });
+
+      // Update lead status
+      await supabase
+        .from("leads")
+        .update({ status: "proposal_sent" })
+        .eq("id", proposal.lead_id);
+    }
+
     return new Response(JSON.stringify({ success: true, emailResponse }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
