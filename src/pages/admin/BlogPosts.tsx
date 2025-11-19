@@ -3,12 +3,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Sparkles, Settings, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import BlogPostCard from "@/components/admin/BlogPostCard";
 import BlogPostForm from "@/components/admin/BlogPostForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 export default function BlogPosts() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,6 +36,45 @@ export default function BlogPosts() {
       const { data, error } = await query;
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ['blog-settings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('blog_settings')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const generatePost = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('generate-blog-post', {
+        body: { topic: 'Marketing Digital e Tecnologia' }
+      });
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
+      toast({
+        title: "Post gerado com sucesso!",
+        description: `"${data.title}" foi criado.`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Erro ao gerar post",
+        description: error instanceof Error ? error.message : "Ocorreu um erro.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -90,6 +132,50 @@ export default function BlogPosts() {
           Novo Post
         </Button>
       </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Automação de Blog</CardTitle>
+              <Badge variant={settings?.automation_enabled ? "default" : "secondary"}>
+                {settings?.automation_enabled ? "Ativa" : "Inativa"}
+              </Badge>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/admin/settings">
+                <Settings className="mr-2 h-4 w-4" />
+                Configurações
+              </Link>
+            </Button>
+          </div>
+          <CardDescription>
+            {settings?.automation_enabled 
+              ? "Posts são gerados automaticamente às segundas, quartas e sextas-feiras"
+              : "Ative a automação nas configurações para gerar posts automaticamente"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button 
+            onClick={() => generatePost.mutate()}
+            disabled={generatePost.isPending}
+            className="w-full sm:w-auto"
+          >
+            {generatePost.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Gerando...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Gerar Post Agora
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
 
       <div className="flex gap-4">
         <div className="relative flex-1">
