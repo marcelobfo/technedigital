@@ -32,7 +32,12 @@ interface ServiceFormProps {
 }
 
 export default function ServiceForm({ service, onSuccess }: ServiceFormProps) {
-  const [features, setFeatures] = useState<string[]>(service?.features || []);
+  // Convert features from {text: "..."} format to string array
+  const initialFeatures = service?.features 
+    ? service.features.map((f: any) => typeof f === 'string' ? f : f.text)
+    : [];
+  
+  const [features, setFeatures] = useState<string[]>(initialFeatures);
   const [newFeature, setNewFeature] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -53,13 +58,16 @@ export default function ServiceForm({ service, onSuccess }: ServiceFormProps) {
 
   const saveMutation = useMutation({
     mutationFn: async (data: FormData) => {
+      // Convert features to {text: "..."} format for database
+      const formattedFeatures = features.map(f => ({ text: f }));
+      
       const serviceData = {
         title: data.title,
         slug: data.slug,
         short_description: data.short_description,
         full_description: data.full_description,
         icon: data.icon || null,
-        features: features,
+        features: formattedFeatures,
         is_featured: data.is_featured,
         status: data.status,
         display_order: data.display_order,
