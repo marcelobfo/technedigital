@@ -197,6 +197,23 @@ export function Hero() {
                 </div>
               )}
             </div>
+
+            {/* CTA Button após Cases de Sucesso */}
+            <div className="mt-12 md:mt-16 text-center animate-fade-in">
+              <Link to="/contact">
+                <Button 
+                  size="lg" 
+                  className="group shadow-xl hover:shadow-2xl transition-all duration-300"
+                  style={{ background: 'var(--gradient-accent)' }}
+                >
+                  Solicitar Orçamento!
+                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </Button>
+              </Link>
+              <p className="text-sm text-muted-foreground mt-4">
+                Transforme seu negócio com nossas soluções
+              </p>
+            </div>
           </div>
         </div>
       </div>
