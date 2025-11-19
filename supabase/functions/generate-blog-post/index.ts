@@ -26,37 +26,62 @@ serve(async (req) => {
 
     // Step 1: Generate blog content with AI
     console.log('Step 1: Generating content with AI...');
-    const contentPrompt = `Você é um especialista em SEO e marketing de conteúdo. Crie um artigo de blog completo e profissional sobre "${topic}" seguindo estas diretrizes rigorosas de SEO:
+    const contentPrompt = `Você é um especialista em copywriting e marketing de conteúdo que cria artigos que CONVERTEM. 
 
-1. TÍTULO: 50-60 caracteres, com palavra-chave principal no início, atrativo e clicável
-2. RESUMO (excerpt): 150-160 caracteres, persuasivo com benefício claro para o leitor
+Crie um artigo de blog completo sobre "${topic}" seguindo estas diretrizes:
+
+1. TÍTULO: 50-60 caracteres, use gatilhos mentais (números, "segredos", "erros", "guia"), palavra-chave no início
+
+2. RESUMO (excerpt): 150-160 caracteres, crie curiosidade e prometa benefício claro
+
 3. CONTEÚDO (1200-1500 palavras em HTML):
-   - Use tags HTML semânticas: <h2>, <h3>, <p>, <ul>, <li>, <strong>, <em>
-   - Introdução (2-3 parágrafos) com palavra-chave nos primeiros 100 palavras
-   - 4-6 seções principais com <h2> contendo variações da palavra-chave
-   - Subseções com <h3> quando relevante
-   - Parágrafos curtos (2-4 linhas) para melhor leitura
-   - Use bullet points (<ul><li>) para listas e informações importantes
-   - Inclua exemplos práticos e dados quando possível
-   - Conclusão forte com chamada para ação (CTA)
-4. CATEGORIA: Uma categoria relevante (ex: Tecnologia, Marketing, Design, Desenvolvimento, Negócios)
-5. TAGS: 5-7 tags relevantes (mix de palavras-chave primárias e secundárias)
-6. PROMPT DE IMAGEM: Descrição detalhada e profissional para gerar uma imagem moderna, atrativa e relacionada ao tema (16:9 aspect ratio, estilo profissional, cores vibrantes)
+   ESTRUTURA:
+   - Introdução (2-3 parágrafos): Fale DIRETAMENTE com o leitor, use "você", apresente uma dor ou desejo
+   - 4-6 seções principais com <h2>: Use títulos diretos e acionáveis
+   - Use <h3> para subseções
+   - Parágrafos curtos (2-3 linhas máximo)
+   - Use bullet points (<ul><li>) para listas
+   - Exemplos REAIS sempre que possível
+   - Inclua dados e números específicos
+   
+   TOM DE VOZ:
+   - Conversacional e direto (use "você", "seu", "sua")
+   - Prático e sem enrolação
+   - Empático com as dores do leitor
+   - Confident mas não arrogante
+   
+   CTAs ESTRATÉGICOS (incluir 2-3 ao longo do conteúdo):
+   - Meio do artigo: "Quer uma análise gratuita do seu site? Fale conosco!"
+   - Final: "Pronto para transformar seu site em máquina de vendas? Entre em contato!"
+   - Pode incluir: "Baixe nosso checklist gratuito", "Agende uma consultoria", etc.
+   
+   SEO (otimizar naturalmente):
+   - Palavra-chave nos primeiros 100 palavras
+   - Variações da palavra-chave nos <h2>
+   - Links internos sugeridos (usar #)
+   - Meta description otimizada
 
-IMPORTANTE: 
-- O conteúdo deve ser original, informativo e de alta qualidade
-- Use linguagem clara e acessível, mas profissional
-- Otimize naturalmente para SEO sem keyword stuffing
-- O HTML deve ser válido e bem formatado
+4. CATEGORIA: Escolha entre: Marketing, Tecnologia, Design, Negócios, E-commerce, Ferramentas
 
-Retorne APENAS um JSON válido com esta estrutura exata:
+5. TAGS: 5-7 tags práticas (mix de palavras-chave + long-tail)
+
+6. PROMPT DE IMAGEM: Descrição profissional, moderna, cores vibrantes, 16:9, relacionada ao tema
+
+CRÍTICO:
+- Use linguagem CLARA e DIRETA
+- Foque em RESULTADOS e BENEFÍCIOS, não só teoria
+- Inclua pelo menos 2 CTAs para contato/conversão
+- Crie senso de urgência ou exclusividade quando apropriado
+- NUNCA use jargões desnecessários
+
+Retorne APENAS JSON válido:
 {
-  "title": "título do post",
-  "excerpt": "resumo atrativo",
-  "content": "conteúdo completo em HTML",
+  "title": "título com gatilho mental",
+  "excerpt": "resumo que gera curiosidade",
+  "content": "conteúdo completo em HTML com CTAs",
   "category": "categoria principal",
   "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
-  "imagePrompt": "descrição detalhada para gerar imagem"
+  "imagePrompt": "descrição detalhada"
 }`;
 
     const contentResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
