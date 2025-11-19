@@ -94,6 +94,53 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_settings: {
+        Row: {
+          business_hours: string | null
+          created_at: string | null
+          email: string
+          id: string
+          location: string
+          maps_embed_url: string
+          phone: string
+          updated_at: string | null
+          updated_by: string | null
+          whatsapp_number: string | null
+        }
+        Insert: {
+          business_hours?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          location?: string
+          maps_embed_url?: string
+          phone?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          whatsapp_number?: string | null
+        }
+        Update: {
+          business_hours?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          location?: string
+          maps_embed_url?: string
+          phone?: string
+          updated_at?: string | null
+          updated_by?: string | null
+          whatsapp_number?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       financial_records: {
         Row: {
           amount: number
