@@ -76,7 +76,7 @@ export function Hero() {
           {/* Cases de Sucesso Section */}
           <div className="pt-16">
             <div className="text-center mb-8 space-y-4 animate-fade-in">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 text-accent text-sm font-medium border border-accent/20">
                 <Trophy className="w-4 h-4" />
                 <span>Cases de Sucesso</span>
               </div>
