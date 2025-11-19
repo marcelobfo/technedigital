@@ -92,7 +92,7 @@ export function Hero() {
               {isLoading ? (
                 <Skeleton className="aspect-video rounded-2xl w-full" />
               ) : projects && projects.length > 0 ? (
-                <div className="bg-card/50 backdrop-blur-sm rounded-3xl p-6 md:p-8 border border-border/50 shadow-2xl">
+                <div className="bg-card/50 backdrop-blur-sm rounded-2xl md:rounded-3xl p-4 md:p-6 lg:p-8 border border-border/50 shadow-2xl">
                   <Carousel
                     setApi={setApi}
                     opts={{
@@ -110,11 +110,11 @@ export function Hero() {
                       {projects.map((project) => (
                         <CarouselItem key={project.id}>
                           <Link to={`/portfolio/${project.slug}`} className="block group">
-                            <div className="relative aspect-video rounded-2xl overflow-hidden border border-border/50 transition-all duration-500 group-hover:shadow-2xl group-hover:border-primary/50">
+                            <div className="relative aspect-video rounded-xl md:rounded-2xl overflow-hidden border border-border/50 transition-all duration-500 group-hover:shadow-2xl group-hover:border-primary/50">
                               {/* Badge Case de Sucesso */}
                   <div className="absolute top-4 left-4 z-10">
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 text-accent text-xs font-semibold shadow-lg backdrop-blur-sm border border-accent/20">
-                    <Trophy className="w-3 h-3" />
+                  <div className="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-full bg-accent/10 text-accent text-[10px] md:text-xs font-semibold shadow-lg backdrop-blur-sm border border-accent/20">
+                    <Trophy className="w-2.5 h-2.5 md:w-3 md:h-3" />
                     <span>Case de Sucesso</span>
                   </div>
                   </div>
@@ -131,52 +131,52 @@ export function Hero() {
                                 </div>
                               )}
                               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-black/30"></div>
-                            <div className="absolute bottom-0 left-0 right-0 p-8 backdrop-blur-sm">
-                              <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-primary-foreground transition-colors drop-shadow-lg">
-                                {project.title}
-                              </h3>
-                              <p className="text-white/90 line-clamp-2 drop-shadow-md">
-                                {project.description}
-                              </p>
-                              {project.client_name && (
-                                <p className="text-sm text-white/80 mt-2 drop-shadow-md">
-                                  Cliente: {project.client_name}
+                              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 lg:p-8 backdrop-blur-sm">
+                                <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-white mb-2 group-hover:text-primary-foreground transition-colors drop-shadow-lg">
+                                  {project.title}
+                                </h3>
+                                <p className="text-sm md:text-base text-white/90 line-clamp-2 drop-shadow-md">
+                                  {project.description}
                                 </p>
-                              )}
-                              {project.technologies && project.technologies.length > 0 && (
-                                <div className="flex flex-wrap gap-2 mt-3">
-                                  {project.technologies.slice(0, 4).map((tech, idx) => (
-                                    <span
-                                      key={idx}
-                                      className="text-xs px-2 py-1 rounded-full bg-white/20 text-white backdrop-blur-sm border border-white/30"
-                                    >
-                                      {tech}
-                                    </span>
-                                  ))}
-                                </div>
-                              )}
+                                {project.client_name && (
+                                  <p className="text-xs md:text-sm text-white/80 mt-2 drop-shadow-md">
+                                    Cliente: {project.client_name}
+                                  </p>
+                                )}
+                                {project.technologies && project.technologies.length > 0 && (
+                                  <div className="flex flex-wrap gap-1.5 md:gap-2 mt-2 md:mt-3">
+                                    {project.technologies.slice(0, 3).map((tech, idx) => (
+                                      <span
+                                        key={idx}
+                                        className="text-[10px] md:text-xs px-2 py-0.5 md:py-1 rounded-full bg-white/20 text-white backdrop-blur-sm border border-white/30"
+                                      >
+                                        {tech}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
                             </div>
                           </div>
                           </Link>
                         </CarouselItem>
                       ))}
                     </CarouselContent>
-                    <CarouselPrevious className="left-2 md:left-4 bg-background/80 backdrop-blur-md hover:bg-background border-border/50" />
-                    <CarouselNext className="right-2 md:right-4 bg-background/80 backdrop-blur-md hover:bg-background border-border/50" />
+                    <CarouselPrevious className="left-1 md:left-2 lg:left-4 h-8 w-8 md:h-10 md:w-10 bg-background/80 backdrop-blur-md hover:bg-background border-border/50" />
+                    <CarouselNext className="right-1 md:right-2 lg:right-4 h-8 w-8 md:h-10 md:w-10 bg-background/80 backdrop-blur-md hover:bg-background border-border/50" />
                   </Carousel>
 
                   {/* Slide Indicators */}
                   {projects.length > 1 && (
-                    <div className="flex justify-center gap-2 mt-6">
+                    <div className="flex justify-center gap-1.5 md:gap-2 mt-4 md:mt-6">
                       {projects.map((_, index) => (
                         <button
                           key={index}
                           onClick={() => api?.scrollTo(index)}
                           className={cn(
-                            "h-2 rounded-full transition-all duration-300",
+                            "h-1.5 md:h-2 rounded-full transition-all duration-300",
                             currentIndex === index 
-                              ? "bg-primary w-8" 
-                              : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-2"
+                              ? "bg-primary w-6 md:w-8" 
+                              : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-1.5 md:w-2"
                           )}
                           aria-label={`Ir para slide ${index + 1}`}
                         />
