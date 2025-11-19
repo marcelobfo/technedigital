@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Mail, Phone, MapPin } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
@@ -28,6 +28,27 @@ const Contact = () => {
     message: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contactInfo, setContactInfo] = useState({
+    email: 'contato@technedigital.com',
+    phone: '+55 11 99999-9999',
+    location: 'São Paulo, SP - Brasil',
+    maps_embed_url: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.0977!2d-46.6546!3d-23.5615!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDMzJzQxLjQiUyA0NsKwMzknMTYuNiJX!5e0!3m2!1spt-BR!2sbr!4v1234567890'
+  });
+
+  useEffect(() => {
+    const fetchContactSettings = async () => {
+      const { data, error } = await supabase
+        .from('contact_settings')
+        .select('*')
+        .single();
+      
+      if (data && !error) {
+        setContactInfo(data);
+      }
+    };
+    
+    fetchContactSettings();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,7 +139,7 @@ const Contact = () => {
                       </div>
                       <div>
                         <p className="font-semibold">E-mail</p>
-                        <p className="text-sm text-muted-foreground">contato@technedigital.com</p>
+                        <p className="text-sm text-muted-foreground">{contactInfo.email}</p>
                       </div>
                     </div>
 
@@ -128,7 +149,7 @@ const Contact = () => {
                       </div>
                       <div>
                         <p className="font-semibold">Telefone</p>
-                        <p className="text-sm text-muted-foreground">+55 11 99999-9999</p>
+                        <p className="text-sm text-muted-foreground">{contactInfo.phone}</p>
                       </div>
                     </div>
 
@@ -138,7 +159,7 @@ const Contact = () => {
                       </div>
                       <div>
                         <p className="font-semibold">Localização</p>
-                        <p className="text-sm text-muted-foreground">São Paulo, SP - Brasil</p>
+                        <p className="text-sm text-muted-foreground">{contactInfo.location}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -146,7 +167,7 @@ const Contact = () => {
 
                 <div className="aspect-video rounded-lg overflow-hidden border border-border/50">
                   <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.0977!2d-46.6546!3d-23.5615!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDMzJzQxLjQiUyA0NsKwMzknMTYuNiJX!5e0!3m2!1spt-BR!2sbr!4v1234567890"
+                    src={contactInfo.maps_embed_url}
                     width="100%"
                     height="100%"
                     style={{ border: 0 }}
