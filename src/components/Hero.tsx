@@ -110,7 +110,7 @@ export function Hero() {
                       {projects.map((project) => (
                         <CarouselItem key={project.id}>
                           <Link to={`/portfolio/${project.slug}`} className="block group">
-                            <div className="relative aspect-video rounded-xl md:rounded-2xl overflow-hidden border border-border/50 transition-all duration-500 group-hover:shadow-2xl group-hover:border-primary/50">
+                            <div className="relative aspect-[4/3] md:aspect-video rounded-xl md:rounded-2xl overflow-hidden border border-border/50 transition-all duration-500 group-hover:shadow-2xl group-hover:border-primary/50">
                               {/* Badge Case de Sucesso */}
                   <div className="absolute top-4 left-4 z-10">
                   <div className="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-full bg-accent/10 text-accent text-[10px] md:text-xs font-semibold shadow-lg backdrop-blur-sm border border-accent/20">
