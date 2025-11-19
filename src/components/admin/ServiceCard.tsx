@@ -1,7 +1,23 @@
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2, Star } from "lucide-react";
+import { Edit, Trash2, Star, Globe, Search, TrendingUp, Code, Palette, Smartphone, Mail, BarChart, MessageSquare, Zap, Shield, Settings } from "lucide-react";
+
+// Map icon names to Lucide components
+const iconMap: Record<string, any> = {
+  Globe,
+  Search,
+  TrendingUp,
+  Code,
+  Palette,
+  Smartphone,
+  Mail,
+  BarChart,
+  MessageSquare,
+  Zap,
+  Shield,
+  Settings,
+};
 
 interface ServiceCardProps {
   service: any;
@@ -15,15 +31,18 @@ export default function ServiceCard({ service, onEdit, onDelete }: ServiceCardPr
     inactive: "bg-gray-500",
   };
 
+  // Get the icon component from the map
+  const IconComponent = service.icon ? iconMap[service.icon] : null;
+
   return (
     <Card className="group transition-all hover:shadow-lg">
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="mb-3 flex items-center justify-between">
-              {service.icon && (
+              {IconComponent && (
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <span className="text-2xl">{service.icon}</span>
+                  <IconComponent className="h-6 w-6 text-primary" />
                 </div>
               )}
               <div className="flex gap-2">

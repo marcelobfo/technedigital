@@ -2,11 +2,13 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, Clock, ArrowLeft, Share2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Calendar, Clock, ArrowLeft, Share2, ArrowRight } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { BlogSidebar } from '@/components/blog/BlogSidebar';
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -26,6 +28,27 @@ export default function BlogPost() {
       if (error) throw error;
       if (!data) return null;
       return data;
+    },
+  });
+
+  // Fetch related posts (same category or similar tags)
+  const { data: relatedPosts = [] } = useQuery({
+    queryKey: ['related-posts', post?.category, post?.tags],
+    enabled: !!post,
+    queryFn: async () => {
+      if (!post) return [];
+      
+      const { data, error } = await supabase
+        .from('blog_posts')
+        .select('id, title, slug, cover_image, excerpt, category, published_at, created_at')
+        .eq('status', 'published')
+        .neq('id', post.id)
+        .or(`category.eq.${post.category},tags.ov.{${post.tags?.join(',') || ''}}`)
+        .order('published_at', { ascending: false })
+        .limit(3);
+      
+      if (error) throw error;
+      return data || [];
     },
   });
 
@@ -99,12 +122,23 @@ export default function BlogPost() {
           </Link>
         </div>
 
-        {/* Post Header */}
-        <article className="py-12">
-          <div className="container max-w-4xl">
-            <div className="space-y-6 mb-12">
-              <Badge>{post.category}</Badge>
-              <h1 className="text-4xl md:text-5xl font-bold">{post.title}</h1>
+        {/* Post Content with Sidebar */}
+        <div className="container py-12">
+          <div className="grid lg:grid-cols-[1fr_300px] gap-8">
+            {/* Main Content */}
+            <article className="max-w-4xl">
+              {/* Breadcrumb */}
+              <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+                <Link to="/" className="hover:text-foreground">Home</Link>
+                <span>/</span>
+                <Link to="/blog" className="hover:text-foreground">Blog</Link>
+                <span>/</span>
+                <Link to={`/blog?category=${post.category}`} className="hover:text-foreground">{post.category}</Link>
+              </nav>
+
+              <div className="space-y-6 mb-12">
+                <Badge>{post.category}</Badge>
+                <h1 className="text-4xl md:text-5xl font-bold">{post.title}</h1>
               
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
@@ -145,8 +179,24 @@ export default function BlogPost() {
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
 
+            {/* Tags */}
+            {post.tags && post.tags.length > 0 && (
+              <div className="mt-12 pt-8 border-t border-border/40">
+                <p className="text-sm text-muted-foreground mb-3">Tags:</p>
+                <div className="flex flex-wrap gap-2">
+                  {post.tags.map((tag: string) => (
+                    <Link key={tag} to={`/blog?tag=${tag}`}>
+                      <Badge variant="secondary" className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors">
+                        {tag}
+                      </Badge>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Author Info */}
-            <div className="mt-16 pt-8 border-t border-border/40">
+            <div className="mt-8 pt-8 border-t border-border/40">
               <p className="text-sm text-muted-foreground mb-4">Escrito por</p>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center text-white font-bold">
@@ -173,9 +223,54 @@ export default function BlogPost() {
                 </Button>
               </Link>
             </div>
-          </div>
-        </article>
-      </main>
+
+            {/* Related Posts */}
+            {relatedPosts.length > 0 && (
+              <div className="mt-16 pt-8 border-t border-border/40">
+                <h3 className="text-2xl font-bold mb-8">Posts Relacionados</h3>
+                <div className="grid md:grid-cols-3 gap-6">
+                  {relatedPosts.map((relatedPost) => (
+                    <Link key={relatedPost.id} to={`/blog/${relatedPost.slug}`}>
+                      <Card className="group hover-lift h-full">
+                        <CardContent className="p-0">
+                          {relatedPost.cover_image && (
+                            <div className="aspect-video overflow-hidden rounded-t-lg">
+                              <img
+                                src={relatedPost.cover_image}
+                                alt={relatedPost.title}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                            </div>
+                          )}
+                          <div className="p-4 space-y-2">
+                            <Badge className="mb-2">{relatedPost.category}</Badge>
+                            <h4 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">
+                              {relatedPost.title}
+                            </h4>
+                            <p className="text-sm text-muted-foreground line-clamp-2">
+                              {relatedPost.excerpt}
+                            </p>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2">
+                              <Calendar className="w-3 h-3" />
+                              {new Date(relatedPost.published_at || relatedPost.created_at).toLocaleDateString('pt-BR')}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </article>
+
+          {/* Sidebar */}
+          <aside className="lg:sticky lg:top-24 lg:self-start">
+            <BlogSidebar />
+          </aside>
+        </div>
+      </div>
+    </main>
 
       <Footer />
     </div>
