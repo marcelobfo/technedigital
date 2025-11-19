@@ -155,21 +155,51 @@ export default function Analytics() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold">Analytics do Site</h1>
           <p className="text-muted-foreground">Visualize estatísticas de visitantes e páginas</p>
         </div>
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Selecione o período" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="7">Últimos 7 dias</SelectItem>
-            <SelectItem value="30">Últimos 30 dias</SelectItem>
-            <SelectItem value="90">Últimos 90 dias</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-4">
+          <Select value={period} onValueChange={setPeriod}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Selecione o período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">Últimos 7 dias</SelectItem>
+              <SelectItem value="30">Últimos 30 dias</SelectItem>
+              <SelectItem value="90">Últimos 90 dias</SelectItem>
+            </SelectContent>
+          </Select>
+          
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm">
+                <Trash2 className="mr-2 h-4 w-4" />
+                Limpar Dados
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta ação irá remover TODOS os dados de analytics permanentemente. 
+                  Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleClearAnalytics}
+                  disabled={clearing}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {clearing ? "Limpando..." : "Limpar Todos os Dados"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
