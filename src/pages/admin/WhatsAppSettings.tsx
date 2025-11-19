@@ -62,10 +62,17 @@ export default function WhatsAppSettings() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
 
+      if (!user) {
+        toast.error('Usuário não autenticado');
+        return;
+      }
+
       const dataToSave = {
-        ...settings,
-        updated_by: user?.id,
-        updated_at: new Date().toISOString(),
+        api_url: settings.api_url,
+        api_token: settings.api_token,
+        instance_name: settings.instance_name,
+        is_active: settings.is_active,
+        updated_by: user.id,
       };
 
       if (settings.id) {
@@ -74,20 +81,28 @@ export default function WhatsAppSettings() {
           .update(dataToSave)
           .eq('id', settings.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao atualizar:', error);
+          toast.error(`Erro ao atualizar: ${error.message}`);
+          return;
+        }
       } else {
         const { error } = await supabase
           .from('whatsapp_settings')
           .insert([dataToSave]);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Erro ao inserir:', error);
+          toast.error(`Erro ao inserir: ${error.message}`);
+          return;
+        }
       }
 
       toast.success('Configurações salvas com sucesso!');
-      fetchSettings();
-    } catch (error) {
+      await fetchSettings();
+    } catch (error: any) {
       console.error('Erro ao salvar configurações:', error);
-      toast.error('Erro ao salvar configurações');
+      toast.error(`Erro ao salvar: ${error.message || 'Erro desconhecido'}`);
     } finally {
       setSaving(false);
     }
