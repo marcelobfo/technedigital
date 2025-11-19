@@ -1,15 +1,19 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ImageLightbox } from '@/components/ImageLightbox';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 
 export default function PortfolioProject() {
   const { slug } = useParams<{ slug: string }>();
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const { data: project, isLoading, error } = useQuery({
     queryKey: ['portfolio-project', slug],
@@ -66,6 +70,17 @@ export default function PortfolioProject() {
     );
   }
 
+  // Prepare all images for lightbox (cover + gallery)
+  const allImages = [
+    ...(project.cover_image ? [project.cover_image] : []),
+    ...(project.gallery_images || [])
+  ];
+
+  const handleImageClick = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -117,11 +132,14 @@ export default function PortfolioProject() {
         {project.cover_image && (
           <section className="py-12">
             <div className="container max-w-4xl">
-              <div className="aspect-video rounded-lg overflow-hidden shadow-2xl">
+              <div 
+                className="aspect-video rounded-lg overflow-hidden shadow-2xl cursor-pointer group"
+                onClick={() => handleImageClick(0)}
+              >
                 <img 
                   src={project.cover_image} 
                   alt={project.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
               </div>
             </div>
@@ -173,15 +191,22 @@ export default function PortfolioProject() {
               <div>
                 <h2 className="text-2xl font-semibold mb-6">Galeria</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {project.gallery_images.map((image: string, index: number) => (
-                    <div key={index} className="aspect-video rounded-lg overflow-hidden shadow-lg">
-                      <img 
-                        src={image} 
-                        alt={`${project.title} - Imagem ${index + 1}`}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  ))}
+                  {project.gallery_images.map((image: string, index: number) => {
+                    const coverOffset = project.cover_image ? 1 : 0;
+                    return (
+                      <div 
+                        key={index} 
+                        className="aspect-video rounded-lg overflow-hidden shadow-lg cursor-pointer group"
+                        onClick={() => handleImageClick(index + coverOffset)}
+                      >
+                        <img 
+                          src={image} 
+                          alt={`${project.title} - Imagem ${index + 1}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -205,6 +230,15 @@ export default function PortfolioProject() {
       </main>
 
       <Footer />
+
+      {/* Image Lightbox */}
+      <ImageLightbox
+        images={allImages}
+        initialIndex={lightboxIndex}
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        altPrefix={project.title}
+      />
     </div>
   );
 }
