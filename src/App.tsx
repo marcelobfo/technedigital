@@ -28,17 +28,27 @@ import Users from "./pages/admin/Users";
 import ProposalEditor from "./pages/admin/ProposalEditor";
 import AdminSettings from "./pages/admin/Settings";
 import Newsletter from "./pages/admin/Newsletter";
+import SiteSettings from "./pages/admin/SiteSettings";
+import WhatsAppSettings from "./pages/admin/WhatsAppSettings";
+import Analytics from "./pages/admin/Analytics";
+
+import { TrackingScripts } from "@/components/TrackingScripts";
+import { usePageTracking } from "@/hooks/usePageTracking";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <LanguageProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+const App = () => {
+  usePageTracking();
+  
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <LanguageProvider>
+          <TooltipProvider>
+            <TrackingScripts />
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
             <AuthProvider>
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -63,6 +73,9 @@ const App = () => (
                 <Route path="proposals/new" element={<ProposalEditor />} />
                 <Route path="proposals/:id" element={<ProposalEditor />} />
                 <Route path="newsletter" element={<Newsletter />} />
+                <Route path="analytics" element={<Analytics />} />
+                <Route path="site-settings" element={<SiteSettings />} />
+                <Route path="whatsapp" element={<WhatsAppSettings />} />
                 <Route path="settings" element={<AdminSettings />} />
               </Route>
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
@@ -74,6 +87,7 @@ const App = () => (
       </LanguageProvider>
     </ThemeProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
