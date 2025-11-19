@@ -113,10 +113,10 @@ export function Hero() {
                             <div className="relative aspect-video rounded-2xl overflow-hidden border border-border/50 transition-all duration-500 group-hover:shadow-2xl group-hover:border-primary/50">
                               {/* Badge Case de Sucesso */}
                   <div className="absolute top-4 left-4 z-10">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg backdrop-blur-sm border border-white/20">
-                      <Trophy className="w-3 h-3" />
-                      <span>Case de Sucesso</span>
-                    </div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/10 text-accent text-xs font-semibold shadow-lg backdrop-blur-sm border border-accent/20">
+                    <Trophy className="w-3 h-3" />
+                    <span>Case de Sucesso</span>
+                  </div>
                   </div>
 
                               {project.cover_image ? (
