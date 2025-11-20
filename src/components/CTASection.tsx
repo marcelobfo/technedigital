@@ -8,9 +8,9 @@ export function CTASection() {
 
   return (
     <section className="py-20 md:py-32 bg-muted/30">
-      <div className="container">
-        <div className="max-w-4xl mx-auto text-center space-y-8 p-8 md:p-12 rounded-2xl" style={{ background: 'var(--gradient-primary)' }}>
-          <h2 className="text-3xl md:text-5xl font-bold text-white">
+      <div className="container px-4">
+        <div className="max-w-4xl mx-auto text-center space-y-10 md:space-y-12 p-6 md:p-12 rounded-2xl" style={{ background: 'var(--gradient-primary)' }}>
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-white leading-tight">
             {t('cta.title')}
           </h2>
           <Link to="/contact">
