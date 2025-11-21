@@ -10,6 +10,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
+import { WhatsAppFloatingButton } from '@/components/WhatsAppFloatingButton';
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, 'Nome é obrigatório').max(100, 'Nome muito longo'),
@@ -255,6 +256,10 @@ const Contact = () => {
         </section>
       </main>
       <Footer />
+      <WhatsAppFloatingButton 
+        phoneNumber="5538988285462"
+        message="Olá! Vi a página de contato e gostaria de mais informações sobre os serviços da TECHNE Digital."
+      />
     </div>
   );
 };
