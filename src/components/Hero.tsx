@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Autoplay from 'embla-carousel-autoplay';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { LeadFormDialog } from '@/components/LeadFormDialog';
 
 export function Hero() {
   const { t } = useLanguage();
@@ -60,12 +61,15 @@ export function Hero() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-            <Link to="/contact">
-              <Button size="lg" className="w-full sm:w-auto group" style={{ background: 'var(--gradient-accent)' }}>
-                {t('hero.cta1')}
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Button>
-            </Link>
+            <LeadFormDialog
+              trigger={
+                <Button size="lg" className="w-full sm:w-auto group" style={{ background: 'var(--gradient-accent)' }}>
+                  {t('hero.cta1')}
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Button>
+              }
+              defaultMessage="Gostaria de solicitar um orçamento para meu projeto."
+            />
             <Link to="/portfolio">
               <Button size="lg" variant="outline" className="w-full sm:w-auto">
                 {t('hero.cta2')}
@@ -200,16 +204,19 @@ export function Hero() {
 
             {/* CTA Button após Cases de Sucesso */}
             <div className="mt-16 md:mt-20 text-center animate-fade-in space-y-4">
-              <Link to="/contact">
-                <Button 
-                  size="lg" 
-                  className="group shadow-xl hover:shadow-2xl transition-all duration-300"
-                  style={{ background: 'var(--gradient-accent)' }}
-                >
-                  Solicitar Orçamento!
-                  <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </Link>
+              <LeadFormDialog
+                trigger={
+                  <Button 
+                    size="lg" 
+                    className="group shadow-xl hover:shadow-2xl transition-all duration-300"
+                    style={{ background: 'var(--gradient-accent)' }}
+                  >
+                    Solicitar Orçamento!
+                    <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                }
+                defaultMessage="Vi seus cases de sucesso e gostaria de saber mais sobre como podem ajudar meu negócio."
+              />
               <p className="text-sm text-muted-foreground">
                 Transforme seu negócio com nossas soluções
               </p>
