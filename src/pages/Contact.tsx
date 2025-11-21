@@ -66,7 +66,7 @@ const Contact = () => {
       });
 
       // Inserir lead no banco
-      const { error } = await supabase.from('leads').insert([
+      const { data: lead, error } = await supabase.from('leads').insert([
         {
           name: validatedData.name,
           email: validatedData.email,
@@ -76,13 +76,29 @@ const Contact = () => {
           priority: 'medium',
           source: 'contact_form',
         },
-      ]);
+      ]).select().single();
 
       if (error) throw error;
 
+      // Enviar mensagem de boas-vindas via WhatsApp
+      if (lead && validatedData.phone) {
+        try {
+          await supabase.functions.invoke('send-welcome-whatsapp', {
+            body: {
+              lead_id: lead.id,
+              phone_number: validatedData.phone,
+              lead_name: validatedData.name,
+            },
+          });
+        } catch (whatsappError) {
+          console.error('Erro ao enviar WhatsApp:', whatsappError);
+          // Não bloqueia o fluxo se falhar
+        }
+      }
+
       toast({
-        title: 'Mensagem enviada!',
-        description: 'Entraremos em contato em breve.',
+        title: 'Mensagem enviada! 🎉',
+        description: 'Recebemos seu contato e em breve um especialista entrará em contato via WhatsApp.',
       });
 
       // Limpar formulário
