@@ -103,6 +103,7 @@ export type Database = {
           location: string
           maps_embed_url: string
           phone: string
+          show_map: boolean | null
           updated_at: string | null
           updated_by: string | null
           whatsapp_number: string | null
@@ -115,6 +116,7 @@ export type Database = {
           location?: string
           maps_embed_url?: string
           phone?: string
+          show_map?: boolean | null
           updated_at?: string | null
           updated_by?: string | null
           whatsapp_number?: string | null
@@ -127,6 +129,7 @@ export type Database = {
           location?: string
           maps_embed_url?: string
           phone?: string
+          show_map?: boolean | null
           updated_at?: string | null
           updated_by?: string | null
           whatsapp_number?: string | null

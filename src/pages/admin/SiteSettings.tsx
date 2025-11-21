@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { Save, Mail, Phone, MapPin } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
 
 interface SiteSettings {
   id?: string;
@@ -28,6 +29,7 @@ interface ContactSettings {
   maps_embed_url: string;
   whatsapp_number: string;
   business_hours: string;
+  show_map?: boolean;
 }
 
 export default function SiteSettings() {
@@ -50,6 +52,7 @@ export default function SiteSettings() {
     maps_embed_url: '',
     whatsapp_number: '',
     business_hours: '',
+    show_map: true,
   });
 
   useEffect(() => {
@@ -356,6 +359,22 @@ export default function SiteSettings() {
                   value={contactSettings.location}
                   onChange={(e) => setContactSettings({ ...contactSettings, location: e.target.value })}
                   placeholder="São Paulo, SP - Brasil"
+                />
+              </div>
+
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-0.5">
+                  <Label htmlFor="show_map">Exibir Mapa do Google Maps</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Mostrar ou ocultar o mapa na página de contato
+                  </p>
+                </div>
+                <Switch
+                  id="show_map"
+                  checked={contactSettings.show_map ?? true}
+                  onCheckedChange={(checked) => 
+                    setContactSettings({ ...contactSettings, show_map: checked })
+                  }
                 />
               </div>
 
