@@ -32,7 +32,8 @@ const Contact = () => {
     email: 'contato@technedigital.com',
     phone: '+55 11 99999-9999',
     location: 'São Paulo, SP - Brasil',
-    maps_embed_url: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.0977!2d-46.6546!3d-23.5615!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDMzJzQxLjQiUyA0NsKwMzknMTYuNiJX!5e0!3m2!1spt-BR!2sbr!4v1234567890'
+    maps_embed_url: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3657.0977!2d-46.6546!3d-23.5615!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMjPCsDMzJzQxLjQiUyA0NsKwMzknMTYuNiJX!5e0!3m2!1spt-BR!2sbr!4v1234567890',
+    show_map: true,
   });
 
   useEffect(() => {
@@ -165,18 +166,20 @@ const Contact = () => {
                   </CardContent>
                 </Card>
 
-                <div className="aspect-video rounded-lg overflow-hidden border border-border/50">
-                  <iframe
-                    src={contactInfo.maps_embed_url}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title="Localização TECHNE Digital"
-                  ></iframe>
-                </div>
+                {contactInfo.show_map && (
+                  <div className="aspect-video rounded-lg overflow-hidden border border-border/50">
+                    <iframe
+                      src={contactInfo.maps_embed_url}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Localização TECHNE Digital"
+                    ></iframe>
+                  </div>
+                )}
               </div>
 
               <Card className="border-border/50">

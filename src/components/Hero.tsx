@@ -66,7 +66,7 @@ export function Hero() {
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
-            <Link to="/services">
+            <Link to="/portfolio">
               <Button size="lg" variant="outline" className="w-full sm:w-auto">
                 {t('hero.cta2')}
               </Button>
@@ -199,7 +199,7 @@ export function Hero() {
             </div>
 
             {/* CTA Button após Cases de Sucesso */}
-            <div className="mt-12 md:mt-16 text-center animate-fade-in">
+            <div className="mt-16 md:mt-20 text-center animate-fade-in space-y-4">
               <Link to="/contact">
                 <Button 
                   size="lg" 
@@ -210,7 +210,7 @@ export function Hero() {
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
-              <p className="text-sm text-muted-foreground mt-4">
+              <p className="text-sm text-muted-foreground">
                 Transforme seu negócio com nossas soluções
               </p>
             </div>
