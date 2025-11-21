@@ -11,7 +11,7 @@ export function CTASection() {
         <div className="max-w-4xl mx-auto text-center space-y-10 md:space-y-12 p-6 md:p-12 rounded-2xl" style={{
         background: 'var(--gradient-primary)'
       }}>
-          <h2 className="text-2xl sm:text-3xl font-bold text-white leading-tight font-sans md:text-5xl my-px">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white leading-tight font-sans md:text-5xl my-px py-[40px]">
             {t('cta.title')}
           </h2>
           <Link to="/contact">
