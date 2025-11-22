@@ -133,13 +133,13 @@ export default function SiteSettings() {
   };
 
   const copySitemapUrl = () => {
-    const sitemapUrl = 'https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap';
+    const sitemapUrl = 'https://technedigital.com.br/sitemap.xml';
     navigator.clipboard.writeText(sitemapUrl);
     toast.success('URL do sitemap copiada!');
   };
 
   const viewSitemap = () => {
-    window.open('https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap', '_blank');
+    window.open('https://technedigital.com.br/sitemap.xml', '_blank');
   };
 
   const refreshSitemap = async () => {
@@ -501,7 +501,7 @@ export default function SiteSettings() {
                 <Label>URL do Sitemap</Label>
                 <div className="flex gap-2 mt-2">
                   <Input 
-                    value="https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap"
+                    value="https://technedigital.com.br/sitemap.xml"
                     readOnly
                     className="flex-1 font-mono text-sm"
                   />
@@ -582,7 +582,7 @@ export default function SiteSettings() {
                       <li>
                         Cole a URL:{' '}
                         <code className="bg-muted px-2 py-1 rounded text-xs">
-                          https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap
+                          https://technedigital.com.br/sitemap.xml
                         </code>
                       </li>
                       <li>Clique em <strong>"Enviar"</strong></li>
