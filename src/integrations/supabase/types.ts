@@ -210,6 +210,57 @@ export type Database = {
           },
         ]
       }
+      google_search_console_settings: {
+        Row: {
+          access_token: string | null
+          auto_submit_on_publish: boolean | null
+          auto_submit_sitemap: boolean | null
+          client_id: string
+          client_secret: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          last_sitemap_submit: string | null
+          property_url: string
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          access_token?: string | null
+          auto_submit_on_publish?: boolean | null
+          auto_submit_sitemap?: boolean | null
+          client_id: string
+          client_secret: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sitemap_submit?: string | null
+          property_url?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          access_token?: string | null
+          auto_submit_on_publish?: boolean | null
+          auto_submit_sitemap?: boolean | null
+          client_id?: string
+          client_secret?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sitemap_submit?: string | null
+          property_url?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       lead_activities: {
         Row: {
           activity_type: Database["public"]["Enums"]["activity_type"]
@@ -530,6 +581,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seo_indexing_status: {
+        Row: {
+          coverage_state: string | null
+          created_at: string | null
+          errors: Json | null
+          id: string
+          indexing_status: string | null
+          last_checked: string | null
+          last_crawled: string | null
+          page_type: string | null
+          reference_id: string | null
+          url: string
+          warnings: Json | null
+        }
+        Insert: {
+          coverage_state?: string | null
+          created_at?: string | null
+          errors?: Json | null
+          id?: string
+          indexing_status?: string | null
+          last_checked?: string | null
+          last_crawled?: string | null
+          page_type?: string | null
+          reference_id?: string | null
+          url: string
+          warnings?: Json | null
+        }
+        Update: {
+          coverage_state?: string | null
+          created_at?: string | null
+          errors?: Json | null
+          id?: string
+          indexing_status?: string | null
+          last_checked?: string | null
+          last_crawled?: string | null
+          page_type?: string | null
+          reference_id?: string | null
+          url?: string
+          warnings?: Json | null
+        }
+        Relationships: []
       }
       service_catalog: {
         Row: {
