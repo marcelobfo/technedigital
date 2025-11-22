@@ -28,6 +28,8 @@ import Analytics from "@/pages/admin/Analytics";
 import Financial from "@/pages/admin/Financial";
 import GoogleSearchConsole from "@/pages/admin/GoogleSearchConsole";
 import GoogleOAuthCallback from "@/pages/admin/GoogleOAuthCallback";
+import TermsOfService from "@/pages/TermsOfService";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
 
 export const AppContent = () => {
   usePageTracking(); // ✅ Agora está dentro do Router context
@@ -42,6 +44,8 @@ export const AppContent = () => {
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
       <Route path="/contact" element={<Contact />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/admin/login" element={<Login />} />
       <Route path="/admin/google-callback" element={<GoogleOAuthCallback />} />
       <Route path="/admin" element={<AdminLayout />}>
