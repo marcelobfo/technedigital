@@ -316,7 +316,7 @@ export default function Leads() {
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         <Card className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -324,22 +324,6 @@ export default function Leads() {
               <p className="text-2xl font-bold">{leads.length}</p>
             </div>
             <Users className="h-8 w-8 text-muted-foreground" />
-          </div>
-        </Card>
-        
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">Novos Hoje</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {leads.filter(l => {
-                  const leadDate = new Date(l.created_at);
-                  const today = new Date();
-                  return leadDate.toDateString() === today.toDateString();
-                }).length}
-              </p>
-            </div>
-            <TrendingUp className="h-8 w-8 text-blue-600" />
           </div>
         </Card>
         
