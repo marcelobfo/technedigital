@@ -1,5 +1,8 @@
-# Sitemap proxy
+# Sitemap - PRIORIDADE MÁXIMA
 /sitemap.xml https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap 200!
 
 # WWW redirect
 https://www.technedigital.com.br/* https://technedigital.com.br/:splat 301!
+
+# SPA fallback - ÚLTIMA LINHA
+/*    /index.html   200
