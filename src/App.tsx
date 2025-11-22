@@ -11,6 +11,8 @@ import SiteSettings from "./pages/admin/SiteSettings";
 import WhatsAppSettings from "./pages/admin/WhatsAppSettings";
 import Analytics from "./pages/admin/Analytics";
 import { TrackingScripts } from "@/components/TrackingScripts";
+import { CookieConsent } from "@/components/CookieConsent";
+import { CookiePreferencesButton } from "@/components/CookiePreferencesButton";
 import { AppContent } from "@/components/AppContent";
 
 const queryClient = new QueryClient();
@@ -21,6 +23,8 @@ const App = () => {
       <ThemeProvider>
         <LanguageProvider>
           <TooltipProvider>
+            <CookieConsent />
+            <CookiePreferencesButton />
             <TrackingScripts />
             <Toaster />
             <Sonner />

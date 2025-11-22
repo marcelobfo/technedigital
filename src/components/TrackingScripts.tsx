@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useCookieConsent } from '@/hooks/useCookieConsent';
 
 interface SiteSettings {
   google_analytics_id?: string;
@@ -9,6 +10,7 @@ interface SiteSettings {
 }
 
 export const TrackingScripts = () => {
+  const { hasConsent } = useCookieConsent();
   const [settings, setSettings] = useState<SiteSettings>({});
   const [bodyScripts, setBodyScripts] = useState('');
 
@@ -34,22 +36,24 @@ export const TrackingScripts = () => {
     }
   };
 
-  // Injetar scripts no body
+  // Injetar scripts no body (apenas com consentimento de marketing)
   useEffect(() => {
-    if (bodyScripts) {
+    if (bodyScripts && hasConsent('marketing')) {
       const scriptContainer = document.createElement('div');
       scriptContainer.innerHTML = bodyScripts;
       document.body.appendChild(scriptContainer);
 
       return () => {
-        document.body.removeChild(scriptContainer);
+        if (document.body.contains(scriptContainer)) {
+          document.body.removeChild(scriptContainer);
+        }
       };
     }
-  }, [bodyScripts]);
+  }, [bodyScripts, hasConsent]);
 
-  // Injetar Google Analytics
+  // Injetar Google Analytics (apenas com consentimento)
   useEffect(() => {
-    if (settings.google_analytics_id) {
+    if (settings.google_analytics_id && hasConsent('analytics')) {
       const script1 = document.createElement('script');
       script1.async = true;
       script1.src = `https://www.googletagmanager.com/gtag/js?id=${settings.google_analytics_id}`;
@@ -60,20 +64,32 @@ export const TrackingScripts = () => {
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', '${settings.google_analytics_id}');
+        
+        gtag('consent', 'default', {
+          'analytics_storage': 'granted',
+          'ad_storage': '${hasConsent('marketing') ? 'granted' : 'denied'}'
+        });
+        
+        gtag('config', '${settings.google_analytics_id}', {
+          'anonymize_ip': true
+        });
       `;
       document.head.appendChild(script2);
 
       return () => {
-        document.head.removeChild(script1);
-        document.head.removeChild(script2);
+        if (document.head.contains(script1)) {
+          document.head.removeChild(script1);
+        }
+        if (document.head.contains(script2)) {
+          document.head.removeChild(script2);
+        }
       };
     }
-  }, [settings.google_analytics_id]);
+  }, [settings.google_analytics_id, hasConsent]);
 
-  // Injetar Facebook Pixel
+  // Injetar Facebook Pixel (apenas com consentimento de marketing)
   useEffect(() => {
-    if (settings.facebook_pixel_id) {
+    if (settings.facebook_pixel_id && hasConsent('marketing')) {
       const script = document.createElement('script');
       script.innerHTML = `
         !function(f,b,e,v,n,t,s)
@@ -90,14 +106,16 @@ export const TrackingScripts = () => {
       document.head.appendChild(script);
 
       return () => {
-        document.head.removeChild(script);
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
       };
     }
-  }, [settings.facebook_pixel_id]);
+  }, [settings.facebook_pixel_id, hasConsent]);
 
-  // Injetar scripts personalizados do head
+  // Injetar scripts personalizados do head (apenas com consentimento de marketing)
   useEffect(() => {
-    if (settings.custom_head_scripts) {
+    if (settings.custom_head_scripts && hasConsent('marketing')) {
       const container = document.createElement('div');
       container.innerHTML = settings.custom_head_scripts;
       Array.from(container.children).forEach(child => {
@@ -112,7 +130,7 @@ export const TrackingScripts = () => {
         });
       };
     }
-  }, [settings.custom_head_scripts]);
+  }, [settings.custom_head_scripts, hasConsent]);
 
   return null;
 };
