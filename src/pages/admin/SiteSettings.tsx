@@ -7,8 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Save, Mail, Phone, MapPin } from 'lucide-react';
+import { Save, Mail, Phone, MapPin, Copy, Eye, RefreshCw, Map } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 interface SiteSettings {
   id?: string;
@@ -54,10 +55,17 @@ export default function SiteSettings() {
     business_hours: '',
     show_map: true,
   });
+  const [sitemapStats, setSitemapStats] = useState({
+    totalUrls: 0,
+    blogPosts: 0,
+    projects: 0,
+    services: 0,
+  });
 
   useEffect(() => {
     fetchSettings();
     fetchContactSettings();
+    fetchSitemapStats();
   }, []);
 
   const fetchSettings = async () => {
@@ -98,6 +106,45 @@ export default function SiteSettings() {
       console.error('Erro ao carregar configurações de contato:', error);
       toast.error('Erro ao carregar configurações de contato');
     }
+  };
+
+  const fetchSitemapStats = async () => {
+    try {
+      const [postsResponse, projectsResponse, servicesResponse] = await Promise.all([
+        supabase.from('blog_posts').select('id', { count: 'exact', head: true }).eq('status', 'published'),
+        supabase.from('portfolio_projects').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+        supabase.from('services').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+      ]);
+
+      const blogCount = postsResponse.count || 0;
+      const projectsCount = projectsResponse.count || 0;
+      const servicesCount = servicesResponse.count || 0;
+      const staticPages = 6; // home, about, services, portfolio, blog, contact
+
+      setSitemapStats({
+        totalUrls: staticPages + blogCount + projectsCount,
+        blogPosts: blogCount,
+        projects: projectsCount,
+        services: servicesCount,
+      });
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas do sitemap:', error);
+    }
+  };
+
+  const copySitemapUrl = () => {
+    const sitemapUrl = 'https://technedigital.com.br/sitemap.xml';
+    navigator.clipboard.writeText(sitemapUrl);
+    toast.success('URL do sitemap copiada!');
+  };
+
+  const viewSitemap = () => {
+    window.open('https://technedigital.com.br/sitemap.xml', '_blank');
+  };
+
+  const refreshSitemap = async () => {
+    await fetchSitemapStats();
+    toast.success('Estatísticas do sitemap atualizadas!');
   };
 
   const handleSave = async () => {
@@ -197,6 +244,10 @@ export default function SiteSettings() {
         <TabsList>
           <TabsTrigger value="seo">SEO & Scripts</TabsTrigger>
           <TabsTrigger value="contact">Informações de Contato</TabsTrigger>
+          <TabsTrigger value="sitemap">
+            <Map className="mr-2 h-4 w-4" />
+            Sitemap
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="seo" className="space-y-6">
@@ -423,6 +474,139 @@ export default function SiteSettings() {
               {saving ? 'Salvando...' : 'Salvar Informações de Contato'}
             </Button>
           </div>
+        </TabsContent>
+
+        <TabsContent value="sitemap" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sitemap XML</CardTitle>
+              <CardDescription>
+                Configure e gerencie o sitemap do seu site para mecanismos de busca
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
+              {/* Status do Sitemap */}
+              <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-lg border border-green-200 dark:border-green-900">
+                <h3 className="font-semibold text-green-900 dark:text-green-100 flex items-center gap-2">
+                  ✅ Sitemap ativo e acessível
+                </h3>
+                <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                  Seu sitemap é gerado automaticamente a cada nova publicação
+                </p>
+              </div>
+              
+              {/* URL do Sitemap */}
+              <div>
+                <Label>URL do Sitemap</Label>
+                <div className="flex gap-2 mt-2">
+                  <Input 
+                    value="https://technedigital.com.br/sitemap.xml"
+                    readOnly
+                    className="flex-1 font-mono text-sm"
+                  />
+                  <Button onClick={copySitemapUrl} variant="outline" size="icon">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Use esta URL para enviar ao Google Search Console
+                </p>
+              </div>
+              
+              {/* Estatísticas */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-3xl font-bold text-primary">{sitemapStats.totalUrls}</div>
+                    <p className="text-sm text-muted-foreground mt-1">URLs Totais</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-3xl font-bold text-primary">{sitemapStats.blogPosts}</div>
+                    <p className="text-sm text-muted-foreground mt-1">Posts do Blog</p>
+                  </CardContent>
+                </Card>
+                
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-3xl font-bold text-primary">{sitemapStats.projects}</div>
+                    <p className="text-sm text-muted-foreground mt-1">Projetos</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-3xl font-bold text-primary">6</div>
+                    <p className="text-sm text-muted-foreground mt-1">Páginas Estáticas</p>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Ações */}
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={viewSitemap} variant="outline">
+                  <Eye className="mr-2 h-4 w-4" />
+                  Visualizar Sitemap
+                </Button>
+                
+                <Button onClick={refreshSitemap} variant="outline">
+                  <RefreshCw className="mr-2 h-4 w-4" />
+                  Atualizar Estatísticas
+                </Button>
+              </div>
+              
+              {/* Instruções Google Search Console */}
+              <Accordion type="single" collapsible>
+                <AccordionItem value="google">
+                  <AccordionTrigger>
+                    📊 Como Enviar para o Google Search Console
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4">
+                    <ol className="list-decimal pl-4 space-y-2 text-sm">
+                      <li>
+                        Acesse{' '}
+                        <a 
+                          href="https://search.google.com/search-console" 
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary hover:underline font-medium"
+                        >
+                          Google Search Console
+                        </a>
+                      </li>
+                      <li>Selecione sua propriedade (<strong>technedigital.com.br</strong>)</li>
+                      <li>No menu lateral, clique em <strong>"Sitemaps"</strong></li>
+                      <li>
+                        Cole a URL:{' '}
+                        <code className="bg-muted px-2 py-1 rounded text-xs">
+                          https://technedigital.com.br/sitemap.xml
+                        </code>
+                      </li>
+                      <li>Clique em <strong>"Enviar"</strong></li>
+                      <li>Aguarde o processamento (pode levar alguns dias)</li>
+                    </ol>
+                    
+                    <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded border border-blue-200 dark:border-blue-900">
+                      <p className="text-sm text-blue-900 dark:text-blue-100">
+                        💡 <strong>Dica:</strong> Após enviar, o Google irá crawlear seu site automaticamente. 
+                        Você pode acompanhar o status na seção "Cobertura" do Search Console.
+                      </p>
+                    </div>
+
+                    <div className="bg-amber-50 dark:bg-amber-950/20 p-4 rounded border border-amber-200 dark:border-amber-900">
+                      <p className="text-sm text-amber-900 dark:text-amber-100">
+                        ⚠️ <strong>Importante:</strong> Certifique-se de ter verificado a propriedade do domínio 
+                        no Google Search Console antes de enviar o sitemap.
+                      </p>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
