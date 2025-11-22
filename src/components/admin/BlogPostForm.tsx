@@ -91,6 +91,8 @@ export default function BlogPostForm({ post, onSuccess }: BlogPostFormProps) {
         author_id: user?.id!,
       };
 
+      let postId = post?.id;
+
       if (post?.id) {
         const { error } = await supabase
           .from('blog_posts')
@@ -98,15 +100,45 @@ export default function BlogPostForm({ post, onSuccess }: BlogPostFormProps) {
           .eq('id', post.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { data: newPost, error } = await supabase
           .from('blog_posts')
-          .insert([postData]);
+          .insert([postData])
+          .select()
+          .single();
         if (error) throw error;
+        postId = newPost.id;
       }
+
+      return { postData, postId };
     },
-    onSuccess: () => {
+    onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['blog-posts'] });
       toast({ title: "Post salvo com sucesso!" });
+
+      // Auto-submit para Google Search Console se publicado
+      if (result.postData.status === 'published') {
+        try {
+          const { data: gscSettings } = await supabase
+            .from('google_search_console_settings')
+            .select('auto_submit_on_publish, is_active')
+            .single();
+
+          if (gscSettings?.is_active && gscSettings?.auto_submit_on_publish) {
+            await supabase.functions.invoke('auto-submit-new-content', {
+              body: {
+                url: `https://technedigital.com.br/blog/${result.postData.slug}`,
+                type: 'blog_post',
+                reference_id: result.postId
+              }
+            });
+            console.log('Post submetido ao Google Search Console');
+          }
+        } catch (error) {
+          console.error('Erro ao submeter ao Google:', error);
+          // Não bloqueia o sucesso do post
+        }
+      }
+
       onSuccess();
     },
     onError: (error: any) => {

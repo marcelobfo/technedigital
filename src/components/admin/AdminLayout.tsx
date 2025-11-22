@@ -17,7 +17,8 @@ import {
   BarChart3,
   Globe,
   MessageCircle,
-  DollarSign
+  DollarSign,
+  Search
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
@@ -32,6 +33,7 @@ const navItems = [
   { icon: DollarSign, label: 'Financeiro', path: '/admin/financial' },
   { icon: Mail, label: 'Newsletter', path: '/admin/newsletter' },
   { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
+  { icon: Search, label: 'Google Search Console', path: '/admin/google-search-console' },
   { icon: Users, label: 'Usuários', path: '/admin/users' },
   { icon: Globe, label: 'Configurações do Site', path: '/admin/site-settings' },
   { icon: MessageCircle, label: 'WhatsApp', path: '/admin/whatsapp' },
