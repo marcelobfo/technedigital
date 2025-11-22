@@ -60,6 +60,30 @@ const translations = {
     'blog.subtitle': 'Insights sobre tecnologia, marketing e inovação',
     'blog.read': 'Ler mais',
     'blog.recent': 'Posts recentes',
+    
+    // Cookie Consent
+    'cookies.banner.title': 'Usamos cookies para melhorar sua experiência',
+    'cookies.banner.description': 'Utilizamos cookies essenciais, de análise e marketing para personalizar conteúdo e analisar o tráfego do site. Você pode aceitar todos ou gerenciar suas preferências.',
+    'cookies.banner.accept': 'Aceitar Todos',
+    'cookies.banner.reject': 'Rejeitar Não Essenciais',
+    'cookies.banner.manage': 'Gerenciar Preferências',
+    'cookies.banner.privacy': 'Ver Política de Privacidade',
+    
+    'cookies.preferences.title': 'Preferências de Cookies',
+    'cookies.preferences.description': 'Controle quais cookies você aceita. Os cookies essenciais são necessários para o funcionamento do site e não podem ser desativados.',
+    
+    'cookies.essential.title': 'Cookies Essenciais',
+    'cookies.essential.description': 'Necessários para o funcionamento básico do site, incluindo autenticação, sessão e preferências de idioma. Estes cookies não podem ser desativados.',
+    
+    'cookies.analytics.title': 'Cookies de Analytics',
+    'cookies.analytics.description': 'Nos ajudam a entender como você usa o site através de estatísticas anônimas de uso. Não identificamos você pessoalmente.',
+    
+    'cookies.marketing.title': 'Cookies de Marketing',
+    'cookies.marketing.description': 'Permitem personalizar anúncios e conteúdo relevante. Podem ser usados para remarketing e publicidade direcionada.',
+    
+    'cookies.save': 'Salvar Preferências',
+    'cookies.acceptAll': 'Aceitar Todos',
+    'cookies.rejectAll': 'Rejeitar Não Essenciais',
   },
   en: {
     'nav.home': 'Home',
@@ -112,6 +136,30 @@ const translations = {
     'blog.subtitle': 'Insights on technology, marketing and innovation',
     'blog.read': 'Read more',
     'blog.recent': 'Recent posts',
+    
+    // Cookie Consent
+    'cookies.banner.title': 'We use cookies to improve your experience',
+    'cookies.banner.description': 'We use essential, analytics and marketing cookies to personalize content and analyze site traffic. You can accept all or manage your preferences.',
+    'cookies.banner.accept': 'Accept All',
+    'cookies.banner.reject': 'Reject Non-Essential',
+    'cookies.banner.manage': 'Manage Preferences',
+    'cookies.banner.privacy': 'View Privacy Policy',
+    
+    'cookies.preferences.title': 'Cookie Preferences',
+    'cookies.preferences.description': 'Control which cookies you accept. Essential cookies are necessary for the site to function and cannot be disabled.',
+    
+    'cookies.essential.title': 'Essential Cookies',
+    'cookies.essential.description': 'Required for basic site functionality, including authentication, session and language preferences. These cookies cannot be disabled.',
+    
+    'cookies.analytics.title': 'Analytics Cookies',
+    'cookies.analytics.description': 'Help us understand how you use the site through anonymous usage statistics. We do not personally identify you.',
+    
+    'cookies.marketing.title': 'Marketing Cookies',
+    'cookies.marketing.description': 'Allow us to personalize ads and relevant content. May be used for remarketing and targeted advertising.',
+    
+    'cookies.save': 'Save Preferences',
+    'cookies.acceptAll': 'Accept All',
+    'cookies.rejectAll': 'Reject Non-Essential',
   },
   es: {
     'nav.home': 'Inicio',
@@ -164,6 +212,30 @@ const translations = {
     'blog.subtitle': 'Perspectivas sobre tecnología, marketing e innovación',
     'blog.read': 'Leer más',
     'blog.recent': 'Posts recientes',
+    
+    // Cookie Consent
+    'cookies.banner.title': 'Usamos cookies para mejorar su experiencia',
+    'cookies.banner.description': 'Utilizamos cookies esenciales, de análisis y marketing para personalizar contenido y analizar el tráfico del sitio. Puede aceptar todos o gestionar sus preferencias.',
+    'cookies.banner.accept': 'Aceptar Todos',
+    'cookies.banner.reject': 'Rechazar No Esenciales',
+    'cookies.banner.manage': 'Gestionar Preferencias',
+    'cookies.banner.privacy': 'Ver Política de Privacidad',
+    
+    'cookies.preferences.title': 'Preferencias de Cookies',
+    'cookies.preferences.description': 'Controle qué cookies acepta. Las cookies esenciales son necesarias para el funcionamiento del sitio y no pueden desactivarse.',
+    
+    'cookies.essential.title': 'Cookies Esenciales',
+    'cookies.essential.description': 'Necesarias para el funcionamiento básico del sitio, incluyendo autenticación, sesión y preferencias de idioma. Estas cookies no pueden desactivarse.',
+    
+    'cookies.analytics.title': 'Cookies de Analytics',
+    'cookies.analytics.description': 'Nos ayudan a entender cómo usa el sitio a través de estadísticas anónimas de uso. No lo identificamos personalmente.',
+    
+    'cookies.marketing.title': 'Cookies de Marketing',
+    'cookies.marketing.description': 'Permiten personalizar anuncios y contenido relevante. Pueden usarse para remarketing y publicidad dirigida.',
+    
+    'cookies.save': 'Guardar Preferencias',
+    'cookies.acceptAll': 'Aceptar Todos',
+    'cookies.rejectAll': 'Rechazar No Esenciales',
   },
 };
 
