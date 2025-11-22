@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, Briefcase, MessageSquare, Users, DollarSign, TrendingUp } from 'lucide-react';
+import GoogleSearchConsoleWidget from '@/components/admin/GoogleSearchConsoleWidget';
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
@@ -71,9 +72,15 @@ export default function Dashboard() {
   ];
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
+        <p className="text-muted-foreground">
+          Visão geral do seu negócio
+        </p>
+      </div>
       
+      {/* Cards de Estatísticas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {cards.map((card) => (
           <Card key={card.title}>
@@ -88,6 +95,13 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Widget do Google Search Console */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <GoogleSearchConsoleWidget />
+        </div>
       </div>
     </div>
   );
