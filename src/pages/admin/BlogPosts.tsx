@@ -18,6 +18,7 @@ export default function BlogPosts() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<any>(null);
+  const [topic, setTopic] = useState("Marketing Digital e Tecnologia");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -56,7 +57,7 @@ export default function BlogPosts() {
   const generatePost = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('generate-blog-post', {
-        body: { topic: 'Marketing Digital e Tecnologia' }
+        body: { topic: topic }
       });
       
       if (error) throw error;
@@ -70,9 +71,25 @@ export default function BlogPosts() {
       });
     },
     onError: (error) => {
+      let errorMessage = "Ocorreu um erro ao gerar o post.";
+      
+      if (error instanceof Error) {
+        if (error.message.includes('duplicate') || error.message.includes('unique constraint')) {
+          errorMessage = "Já existe um post com esse título. Tente novamente com um tema diferente.";
+        } else if (error.message.includes('CORS')) {
+          errorMessage = "Erro de conexão. Limpe o cache do navegador (Ctrl+Shift+Delete) e tente novamente.";
+        } else if (error.message.includes('429') || error.message.includes('rate limit')) {
+          errorMessage = "Muitas requisições. Aguarde alguns minutos e tente novamente.";
+        } else if (error.message.includes('500')) {
+          errorMessage = "Erro no servidor. Verifique os logs ou tente novamente em alguns minutos.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
         title: "Erro ao gerar post",
-        description: error instanceof Error ? error.message : "Ocorreu um erro.",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -156,24 +173,39 @@ export default function BlogPosts() {
               : "Ative a automação nas configurações para gerar posts automaticamente"}
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Button 
-            onClick={() => generatePost.mutate()}
-            disabled={generatePost.isPending}
-            className="w-full sm:w-auto"
-          >
-            {generatePost.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gerando...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Gerar Post Agora
-              </>
-            )}
-          </Button>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Input 
+              placeholder="Ex: SEO para E-commerce, Automação de Marketing..."
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              className="flex-1"
+              disabled={generatePost.isPending}
+            />
+            <Button 
+              onClick={() => generatePost.mutate()}
+              disabled={generatePost.isPending || !topic.trim()}
+              className="w-full sm:w-auto"
+            >
+              {generatePost.isPending ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="hidden sm:inline">
+                    Gerando... Isso pode levar até 30 segundos
+                  </span>
+                  <span className="sm:hidden">Gerando...</span>
+                </div>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Gerar Post Agora
+                </>
+              )}
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            💡 Dica: Seja específico no tema para obter melhores resultados
+          </p>
         </CardContent>
       </Card>
 

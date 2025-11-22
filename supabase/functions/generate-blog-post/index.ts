@@ -220,14 +220,31 @@ Retorne APENAS JSON válido:
 
     console.log('Image uploaded:', publicUrl);
 
-    // Step 4: Generate SEO-friendly slug
-    const slug = blogContent.title
+    // Step 4: Generate SEO-friendly slug with uniqueness check
+    let baseSlug = blogContent.title
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
       .substring(0, 100);
+
+    // Check for existing slug and add suffix if necessary
+    let slug = baseSlug;
+    let counter = 1;
+    while (true) {
+      const { data: existingPost } = await supabase
+        .from('blog_posts')
+        .select('id')
+        .eq('slug', slug)
+        .maybeSingle();
+      
+      if (!existingPost) break; // Slug is unique
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+    
+    console.log(`Generated unique slug: ${slug}`);
 
     // Step 5: Get first admin user as author
     const { data: adminUser, error: adminError } = await supabase
