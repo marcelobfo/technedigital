@@ -26,6 +26,7 @@ import SiteSettings from "@/pages/admin/SiteSettings";
 import WhatsAppSettings from "@/pages/admin/WhatsAppSettings";
 import Analytics from "@/pages/admin/Analytics";
 import Financial from "@/pages/admin/Financial";
+import Sitemap from "@/pages/Sitemap";
 
 export const AppContent = () => {
   usePageTracking(); // ✅ Agora está dentro do Router context
@@ -40,6 +41,7 @@ export const AppContent = () => {
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
       <Route path="/contact" element={<Contact />} />
+      <Route path="/sitemap.xml" element={<Sitemap />} />
       <Route path="/admin/login" element={<Login />} />
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
