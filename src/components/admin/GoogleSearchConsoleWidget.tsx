@@ -22,7 +22,8 @@ import {
   Loader2,
   ExternalLink,
   ArrowRight,
-  Settings
+  Settings,
+  RefreshCw
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -133,6 +134,21 @@ export default function GoogleSearchConsoleWidget() {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Erro ao salvar credenciais');
+    }
+  });
+
+  const fetchIndexingMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('fetch-indexing-status');
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['seo-indexing-stats-widget'] });
+      toast.success('Status de indexação atualizado!');
+    },
+    onError: (error: Error) => {
+      toast.error(`Erro ao buscar status: ${error.message}`);
     }
   });
 
@@ -340,6 +356,27 @@ export default function GoogleSearchConsoleWidget() {
                 )}
               </div>
             </div>
+
+            {indexingStats && indexingStats.total === 0 && (
+              <Button 
+                variant="secondary" 
+                className="w-full"
+                onClick={() => fetchIndexingMutation.mutate()}
+                disabled={fetchIndexingMutation.isPending}
+              >
+                {fetchIndexingMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Buscando Status...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Buscar Status de Indexação
+                  </>
+                )}
+              </Button>
+            )}
 
             <Link to="/admin/google-search-console">
               <Button variant="outline" className="w-full">
