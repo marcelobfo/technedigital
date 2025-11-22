@@ -1,14 +1,8 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+# Páginas administrativas bloqueadas
+Disallow: /admin/
+
+# Sitemap
+Sitemap: https://technedigital.com.br/sitemap.xml
