@@ -9,6 +9,17 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +33,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Mail, Phone, MessageSquare, Clock, FileText, Plus, Eye, Send, CheckCircle, Circle } from "lucide-react";
+import { Calendar, Mail, Phone, MessageSquare, Clock, FileText, Plus, Eye, Send, CheckCircle, Circle, Building2, Trash2 } from "lucide-react";
+
+const parseCNPJData = (notes: string | null) => {
+  if (!notes) return null;
+  
+  const cnpjSection = notes.split('--- DADOS DA EMPRESA (CNPJ) ---')[1];
+  if (!cnpjSection) return null;
+  
+  const lines = cnpjSection.trim().split('\n');
+  const data: Record<string, string> = {};
+  
+  lines.forEach(line => {
+    const [key, ...valueParts] = line.split(':');
+    if (key && valueParts.length > 0) {
+      data[key.trim()] = valueParts.join(':').trim();
+    }
+  });
+  
+  return data;
+};
 
 type Lead = {
   id: string;
@@ -104,6 +134,44 @@ export function LeadDetailsDrawer({ lead, onClose, onUpdate }: LeadDetailsDrawer
   const createProposal = () => {
     navigate("/admin/proposals/new", { state: { leadId: lead?.id } });
     onClose();
+  };
+
+  const handleDeleteLead = async () => {
+    if (!lead) return;
+    
+    setLoading(true);
+    try {
+      // Delete activities first (foreign key)
+      await supabase
+        .from("lead_activities")
+        .delete()
+        .eq("lead_id", lead.id);
+      
+      // Delete lead
+      const { error } = await supabase
+        .from("leads")
+        .delete()
+        .eq("id", lead.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Lead excluído",
+        description: "O lead foi removido com sucesso",
+      });
+      
+      onUpdate();
+      onClose();
+    } catch (error) {
+      console.error("Error deleting lead:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o lead",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddNote = async () => {
@@ -219,6 +287,116 @@ export function LeadDetailsDrawer({ lead, onClose, onUpdate }: LeadDetailsDrawer
                 </div>
               </div>
             </div>
+
+            {/* CNPJ Data Section */}
+            {(() => {
+              const cnpjData = parseCNPJData(lead.notes);
+              if (!cnpjData) return null;
+              
+              return (
+                <>
+                  <Separator />
+                  <div className="space-y-3">
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <Building2 className="h-4 w-4" />
+                      Dados da Empresa (CNPJ)
+                    </h3>
+                    <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                      {/* Informações Principais */}
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        {cnpjData['Razão Social'] && (
+                          <div className="col-span-2">
+                            <span className="text-muted-foreground">Razão Social:</span>
+                            <p className="font-semibold">{cnpjData['Razão Social']}</p>
+                          </div>
+                        )}
+                        {cnpjData['Nome Fantasia'] && cnpjData['Nome Fantasia'] !== 'N/A' && (
+                          <div className="col-span-2">
+                            <span className="text-muted-foreground">Nome Fantasia:</span>
+                            <p className="font-medium">{cnpjData['Nome Fantasia']}</p>
+                          </div>
+                        )}
+                        {cnpjData['CNPJ Completo'] && (
+                          <div>
+                            <span className="text-muted-foreground">CNPJ:</span>
+                            <p className="font-mono">{cnpjData['CNPJ Completo']}</p>
+                          </div>
+                        )}
+                        {cnpjData['Situação Cadastral'] && (
+                          <div>
+                            <span className="text-muted-foreground">Situação:</span>
+                            <Badge variant={cnpjData['Situação Cadastral'] === 'Ativa' ? 'default' : 'destructive'}>
+                              {cnpjData['Situação Cadastral']}
+                            </Badge>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <Separator />
+                      
+                      {/* Dados Complementares */}
+                      <div className="space-y-2 text-sm">
+                        {cnpjData['Porte'] && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Porte:</span>
+                            <span>{cnpjData['Porte']}</span>
+                          </div>
+                        )}
+                        {cnpjData['Capital Social'] && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Capital Social:</span>
+                            <span>R$ {cnpjData['Capital Social']}</span>
+                          </div>
+                        )}
+                        {cnpjData['Data Início Atividade'] && (
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Início Atividade:</span>
+                            <span>{cnpjData['Data Início Atividade']}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      <Separator />
+                      
+                      {/* Atividade Principal */}
+                      {cnpjData['Atividade Principal'] && (
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Atividade Principal:</span>
+                          <p className="mt-1">{cnpjData['Atividade Principal']}</p>
+                        </div>
+                      )}
+                      
+                      <Separator />
+                      
+                      {/* Endereço */}
+                      <div className="text-sm space-y-1">
+                        <span className="text-muted-foreground font-medium">Endereço:</span>
+                        {cnpjData['Endereço'] && <p>{cnpjData['Endereço']}</p>}
+                        {cnpjData['Cidade'] && <p>{cnpjData['Cidade']}</p>}
+                        {cnpjData['CEP'] && <p>CEP: {cnpjData['CEP']}</p>}
+                      </div>
+                      
+                      {/* Sócios */}
+                      {cnpjData['Sócios'] && (
+                        <>
+                          <Separator />
+                          <div className="text-sm">
+                            <span className="text-muted-foreground font-medium">Sócios:</span>
+                            <div className="mt-2 space-y-1">
+                              {cnpjData['Sócios'].split('\n').filter(Boolean).map((socio, idx) => (
+                                <p key={idx} className="pl-2 border-l-2 border-muted">
+                                  {socio.replace('- ', '')}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
 
             <Separator />
 
@@ -387,12 +565,43 @@ export function LeadDetailsDrawer({ lead, onClose, onUpdate }: LeadDetailsDrawer
                       </div>
                     );
                   })}
-                </div>
-              )}
-            </div>
-          </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
-  );
-}
+                 </div>
+               )}
+             </div>
+
+             {/* Delete Lead Section */}
+             <Separator />
+             <div className="space-y-2 pt-4">
+               <AlertDialog>
+                 <AlertDialogTrigger asChild>
+                   <Button variant="destructive" className="w-full">
+                     <Trash2 className="h-4 w-4 mr-2" />
+                     Excluir Lead
+                   </Button>
+                 </AlertDialogTrigger>
+                 <AlertDialogContent>
+                   <AlertDialogHeader>
+                     <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                     <AlertDialogDescription>
+                       Esta ação não pode ser desfeita. Isso excluirá permanentemente o lead
+                       "{lead.name}" e todas as suas atividades associadas.
+                     </AlertDialogDescription>
+                   </AlertDialogHeader>
+                   <AlertDialogFooter>
+                     <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                     <AlertDialogAction
+                       onClick={handleDeleteLead}
+                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                     >
+                       Sim, excluir
+                     </AlertDialogAction>
+                   </AlertDialogFooter>
+                 </AlertDialogContent>
+               </AlertDialog>
+             </div>
+           </div>
+         </ScrollArea>
+       </SheetContent>
+     </Sheet>
+   );
+ }
