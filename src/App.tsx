@@ -23,13 +23,13 @@ const App = () => {
       <ThemeProvider>
         <LanguageProvider>
           <TooltipProvider>
-            <CookieConsent />
-            <CookiePreferencesButton />
             <TrackingScripts />
             <Toaster />
             <Sonner />
             <BrowserRouter>
               <AuthProvider>
+                <CookieConsent />
+                <CookiePreferencesButton />
                 <AppContent />
               </AuthProvider>
             </BrowserRouter>
