@@ -133,13 +133,13 @@ export default function SiteSettings() {
   };
 
   const copySitemapUrl = () => {
-    const sitemapUrl = 'https://technedigital.com.br/sitemap.xml';
+    const sitemapUrl = 'https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap';
     navigator.clipboard.writeText(sitemapUrl);
     toast.success('URL do sitemap copiada!');
   };
 
   const viewSitemap = () => {
-    window.open('https://technedigital.com.br/sitemap.xml', '_blank');
+    window.open('https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap', '_blank');
   };
 
   const refreshSitemap = async () => {
@@ -501,7 +501,7 @@ export default function SiteSettings() {
                 <Label>URL do Sitemap</Label>
                 <div className="flex gap-2 mt-2">
                   <Input 
-                    value="https://technedigital.com.br/sitemap.xml"
+                    value="https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap"
                     readOnly
                     className="flex-1 font-mono text-sm"
                   />
@@ -510,7 +510,7 @@ export default function SiteSettings() {
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Use esta URL para enviar ao Google Search Console
+                  Use esta URL direta para enviar ao Google Search Console
                 </p>
               </div>
               
@@ -582,7 +582,7 @@ export default function SiteSettings() {
                       <li>
                         Cole a URL:{' '}
                         <code className="bg-muted px-2 py-1 rounded text-xs">
-                          https://technedigital.com.br/sitemap.xml
+                          https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap
                         </code>
                       </li>
                       <li>Clique em <strong>"Enviar"</strong></li>
