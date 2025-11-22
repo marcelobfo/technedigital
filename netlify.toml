@@ -1,0 +1,29 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+# Redirect do sitemap - DEVE VIR PRIMEIRO
+[[redirects]]
+  from = "/sitemap.xml"
+  to = "https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap"
+  status = 200
+  force = true
+  
+[[headers]]
+  for = "/sitemap.xml"
+  [headers.values]
+    Content-Type = "application/xml"
+    Cache-Control = "public, max-age=3600"
+
+# WWW redirect
+[[redirects]]
+  from = "https://www.technedigital.com.br/*"
+  to = "https://technedigital.com.br/:splat"
+  status = 301
+  force = true
+
+# SPA fallback - DEVE VIR POR ÚLTIMO
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
