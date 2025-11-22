@@ -5,4 +5,4 @@ Allow: /
 Disallow: /admin/
 
 # Sitemap
-Sitemap: https://technedigital.com.br/sitemap.xml
+Sitemap: https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap
