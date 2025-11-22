@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
@@ -55,6 +57,7 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
     phone: '',
     service: '',
     message: defaultMessage,
+    termsAccepted: false,
   });
 
   const { data: services, isLoading: loadingServices } = useQuery({
@@ -232,6 +235,7 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
         phone: '',
         service: '',
         message: defaultMessage,
+        termsAccepted: false,
       });
       setCnpjData(null);
       setCnpjError('');
@@ -431,12 +435,35 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
             />
           </div>
 
+          {/* Checkbox de Termos */}
+          <div className="flex items-start space-x-3">
+            <Checkbox
+              id="terms"
+              checked={formData.termsAccepted}
+              onCheckedChange={(checked) => 
+                setFormData({ ...formData, termsAccepted: checked as boolean })
+              }
+              required
+            />
+            <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+              Ao enviar este formulário, você concorda com nossos{' '}
+              <Link to="/terms" className="text-accent hover:underline font-medium" target="_blank">
+                Termos de Uso
+              </Link>{' '}
+              e{' '}
+              <Link to="/privacy" className="text-accent hover:underline font-medium" target="_blank">
+                Política de Privacidade
+              </Link>
+              , e autoriza o contato via WhatsApp.
+            </label>
+          </div>
+
           {/* Botão Submit */}
           <Button
             type="submit"
             className="w-full"
             size="lg"
-            disabled={isSubmitting}
+            disabled={isSubmitting || !formData.termsAccepted}
             style={{ background: 'var(--gradient-accent)' }}
           >
             {isSubmitting ? (
@@ -451,10 +478,6 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
               </>
             )}
           </Button>
-
-          <p className="text-xs text-muted-foreground text-center">
-            Ao enviar, você concorda em receber contato via WhatsApp
-          </p>
         </form>
       </DialogContent>
     </Dialog>

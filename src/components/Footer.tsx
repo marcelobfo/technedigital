@@ -63,6 +63,22 @@ export function Footer() {
               <li>+55 11 99999-9999</li>
             </ul>
           </div>
+
+          <div>
+            <h3 className="font-semibold mb-4">{t('footer.legal')}</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link to="/terms" className="text-muted-foreground hover:text-accent transition-colors">
+                  {t('footer.terms')}
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="text-muted-foreground hover:text-accent transition-colors">
+                  {t('footer.privacy')}
+                </Link>
+              </li>
+            </ul>
+          </div>
         </div>
 
         <div className="mt-12 pt-8 border-t border-border/40">
@@ -77,6 +93,15 @@ export function Footer() {
 
         <div className="mt-8 pt-8 border-t border-border/40 text-center text-sm text-muted-foreground">
           <p>© {currentYear} TECHNE Digital. {t('footer.rights')}</p>
+          <div className="flex justify-center gap-4 mt-3">
+            <Link to="/terms" className="hover:text-accent transition-colors text-xs">
+              {t('footer.terms')}
+            </Link>
+            <span className="text-border">•</span>
+            <Link to="/privacy" className="hover:text-accent transition-colors text-xs">
+              {t('footer.privacy')}
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
