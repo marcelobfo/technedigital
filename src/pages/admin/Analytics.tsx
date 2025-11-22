@@ -7,6 +7,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Users, Eye, MousePointer, TrendingUp, Trash2 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface AnalyticsData {
   totalVisits: number;
@@ -17,7 +19,7 @@ interface AnalyticsData {
   referrers: { referrer: string; count: number }[];
 }
 
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--muted))'];
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', 'hsl(var(--chart-3))'];
 
 export default function Analytics() {
   const { toast } = useToast();
@@ -79,7 +81,7 @@ export default function Analytics() {
       });
       const visitsByDay = Object.entries(dayCount)
         .map(([date, visits]) => ({ date, visits }))
-        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        .sort((a, b) => new Date(a.date.split('/').reverse().join('-')).getTime() - new Date(b.date.split('/').reverse().join('-')).getTime());
 
       // Tipos de dispositivo
       const deviceCount: Record<string, number> = {};
@@ -122,7 +124,7 @@ export default function Analytics() {
       const { error } = await supabase
         .from('site_analytics')
         .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all records
+        .neq('id', '00000000-0000-0000-0000-000000000000');
 
       if (error) throw error;
 
@@ -131,7 +133,6 @@ export default function Analytics() {
         description: "Todos os dados de analytics foram removidos.",
       });
 
-      // Reload analytics
       await fetchAnalytics();
     } catch (error) {
       console.error('Erro ao limpar analytics:', error);
@@ -147,8 +148,27 @@ export default function Analytics() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-4 w-4" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
@@ -202,86 +222,122 @@ export default function Analytics() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      {/* Compact Metric Cards */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Visitas</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
+            <Eye className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.totalVisits}</div>
+            <div className="text-2xl font-bold">{analytics.totalVisits.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">Visitas no período</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Visitantes Únicos</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4 text-secondary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.uniqueVisitors}</div>
+            <div className="text-2xl font-bold">{analytics.uniqueVisitors.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">Usuários distintos</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Páginas Rastreadas</CardTitle>
-            <MousePointer className="h-4 w-4 text-muted-foreground" />
+            <MousePointer className="h-4 w-4 text-accent" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{analytics.topPages.length}</div>
+            <p className="text-xs text-muted-foreground mt-1">Páginas acessadas</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Média de Páginas</CardTitle>
+            <TrendingUp className="h-4 w-4 text-chart-3" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
               {analytics.uniqueVisitors > 0 
-                ? ((analytics.totalVisits / analytics.uniqueVisitors) * 100).toFixed(1) 
-                : 0}%
+                ? (analytics.totalVisits / analytics.uniqueVisitors).toFixed(1)
+                : '0'}
             </div>
+            <p className="text-xs text-muted-foreground mt-1">Páginas por visitante</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Visitas por Dia</CardTitle>
-            <CardDescription>Evolução de visitas no período selecionado</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={analytics.visitsByDay}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Line type="monotone" dataKey="visits" stroke="hsl(var(--primary))" name="Visitas" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Highlighted Line Chart - Full Width */}
+      <Card className="shadow-md">
+        <CardHeader>
+          <CardTitle className="text-xl">📈 Visitas por Dia</CardTitle>
+          <CardDescription>Evolução de visitas no período selecionado</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={280}>
+            <LineChart data={analytics.visitsByDay}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis 
+                dataKey="date" 
+                stroke="hsl(var(--muted-foreground))"
+                fontSize={12}
+              />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <Tooltip 
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--background))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                }}
+              />
+              <Legend />
+              <Line 
+                type="monotone" 
+                dataKey="visits" 
+                stroke="hsl(var(--primary))" 
+                strokeWidth={3}
+                name="Visitas"
+                dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+                activeDot={{ r: 6 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
+      {/* Side by Side Charts */}
+      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Páginas Mais Visitadas</CardTitle>
-            <CardDescription>Top 5 páginas com mais acessos</CardDescription>
+            <CardTitle className="text-lg">📊 Top 5 Páginas</CardTitle>
+            <CardDescription>Páginas com mais acessos</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={analytics.topPages}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="page" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" fill="hsl(var(--primary))" name="Visitas" />
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={analytics.topPages} layout="vertical">
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <YAxis 
+                  dataKey="page" 
+                  type="category" 
+                  width={120}
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={11}
+                />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Bar dataKey="count" fill="hsl(var(--primary))" name="Visitas" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -289,11 +345,11 @@ export default function Analytics() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Dispositivos</CardTitle>
-            <CardDescription>Distribuição por tipo de dispositivo</CardDescription>
+            <CardTitle className="text-lg">🥧 Tipos de Dispositivo</CardTitle>
+            <CardDescription>Distribuição por dispositivo</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="flex justify-center">
+            <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
                   data={analytics.deviceTypes}
@@ -301,39 +357,68 @@ export default function Analytics() {
                   nameKey="device"
                   cx="50%"
                   cy="50%"
-                  outerRadius={100}
-                  label
+                  outerRadius={80}
+                  label={({ device, percent }) => `${device} (${(percent * 100).toFixed(0)}%)`}
+                  labelLine={false}
                 >
                   {analytics.deviceTypes.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend />
+                <Tooltip 
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
+                  }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Origem do Tráfego</CardTitle>
-            <CardDescription>Top 5 fontes de tráfego</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={analytics.referrers} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="referrer" type="category" width={150} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="count" fill="hsl(var(--secondary))" name="Visitas" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Traffic Sources Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">📍 Top 5 Origens de Tráfego</CardTitle>
+          <CardDescription>Principais fontes de visitantes</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[60px]">#</TableHead>
+                <TableHead>Origem</TableHead>
+                <TableHead className="text-right">Visitas</TableHead>
+                <TableHead className="text-right">Percentual</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {analytics.referrers.length > 0 ? (
+                analytics.referrers.map((ref, index) => (
+                  <TableRow key={index} className="hover:bg-muted/50">
+                    <TableCell className="font-medium">{index + 1}</TableCell>
+                    <TableCell className="font-mono text-sm truncate max-w-md">{ref.referrer}</TableCell>
+                    <TableCell className="text-right font-semibold">{ref.count.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                        {((ref.count / analytics.totalVisits) * 100).toFixed(1)}%
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                    Nenhum dado de origem disponível
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }
