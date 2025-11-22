@@ -26,6 +26,8 @@ import SiteSettings from "@/pages/admin/SiteSettings";
 import WhatsAppSettings from "@/pages/admin/WhatsAppSettings";
 import Analytics from "@/pages/admin/Analytics";
 import Financial from "@/pages/admin/Financial";
+import GoogleSearchConsole from "@/pages/admin/GoogleSearchConsole";
+import GoogleOAuthCallback from "@/pages/admin/GoogleOAuthCallback";
 
 export const AppContent = () => {
   usePageTracking(); // ✅ Agora está dentro do Router context
@@ -41,6 +43,7 @@ export const AppContent = () => {
       <Route path="/blog/:slug" element={<BlogPost />} />
       <Route path="/contact" element={<Contact />} />
       <Route path="/admin/login" element={<Login />} />
+      <Route path="/admin/google-callback" element={<GoogleOAuthCallback />} />
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
@@ -56,6 +59,7 @@ export const AppContent = () => {
         <Route path="financial" element={<Financial />} />
         <Route path="newsletter" element={<Newsletter />} />
         <Route path="analytics" element={<Analytics />} />
+        <Route path="google-search-console" element={<GoogleSearchConsole />} />
         <Route path="site-settings" element={<SiteSettings />} />
         <Route path="whatsapp" element={<WhatsAppSettings />} />
         <Route path="settings" element={<AdminSettings />} />

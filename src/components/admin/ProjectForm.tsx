@@ -107,6 +107,8 @@ export default function ProjectForm({ project, onSuccess }: ProjectFormProps) {
         display_order: data.display_order,
       };
 
+      let projectId = project?.id;
+
       if (project?.id) {
         const { error } = await supabase
           .from('portfolio_projects')
@@ -114,15 +116,45 @@ export default function ProjectForm({ project, onSuccess }: ProjectFormProps) {
           .eq('id', project.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase
+        const { data: newProject, error } = await supabase
           .from('portfolio_projects')
-          .insert([projectData]);
+          .insert([projectData])
+          .select()
+          .single();
         if (error) throw error;
+        projectId = newProject.id;
       }
+
+      return { projectData, projectId };
     },
-    onSuccess: () => {
+    onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['portfolio-projects'] });
       toast({ title: "Projeto salvo com sucesso!" });
+
+      // Auto-submit para Google Search Console se ativo
+      if (result.projectData.status === 'active') {
+        try {
+          const { data: gscSettings } = await supabase
+            .from('google_search_console_settings')
+            .select('auto_submit_on_publish, is_active')
+            .single();
+
+          if (gscSettings?.is_active && gscSettings?.auto_submit_on_publish) {
+            await supabase.functions.invoke('auto-submit-new-content', {
+              body: {
+                url: `https://technedigital.com.br/portfolio/${result.projectData.slug}`,
+                type: 'portfolio',
+                reference_id: result.projectId
+              }
+            });
+            console.log('Projeto submetido ao Google Search Console');
+          }
+        } catch (error) {
+          console.error('Erro ao submeter ao Google:', error);
+          // Não bloqueia o sucesso do projeto
+        }
+      }
+
       onSuccess();
     },
     onError: (error: any) => {
