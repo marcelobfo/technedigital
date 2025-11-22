@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Search, Filter, X, LayoutGrid, List } from "lucide-react";
+import { Download, Search, Filter, X, LayoutGrid, List, Users, TrendingUp, Target, Circle, Phone, CheckCircle } from "lucide-react";
 import { LeadCard } from "@/components/admin/LeadCard";
 import { LeadDetailsDrawer } from "@/components/admin/LeadDetailsDrawer";
 import {
@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -32,6 +33,7 @@ type Lead = {
   message: string | null;
   status: string;
   priority: string;
+  source: string | null;
   created_at: string;
   notes: string | null;
   read: boolean | null;
@@ -53,6 +55,7 @@ export default function Leads() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
+  const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const { toast } = useToast();
@@ -206,6 +209,11 @@ export default function Leads() {
       filtered = filtered.filter((lead) => lead.priority === priorityFilter);
     }
 
+    // Source filter
+    if (sourceFilter !== "all") {
+      filtered = filtered.filter((lead) => lead.source === sourceFilter);
+    }
+
     // Date filter
     if (dateFilter !== "all") {
       const now = new Date();
@@ -242,11 +250,12 @@ export default function Leads() {
   const clearFilters = () => {
     setPriorityFilter("all");
     setDateFilter("all");
+    setSourceFilter("all");
     setSearchQuery("");
   };
 
   const hasActiveFilters =
-    priorityFilter !== "all" || dateFilter !== "all" || searchQuery !== "";
+    priorityFilter !== "all" || dateFilter !== "all" || sourceFilter !== "all" || searchQuery !== "";
 
   const getLeadsByStatus = (status: string) => {
     return getFilteredLeads().filter((lead) => lead.status === status);
@@ -293,6 +302,7 @@ export default function Leads() {
                 {[
                   priorityFilter !== "all" ? 1 : 0,
                   dateFilter !== "all" ? 1 : 0,
+                  sourceFilter !== "all" ? 1 : 0,
                   searchQuery !== "" ? 1 : 0,
                 ].reduce((a, b) => a + b, 0)}
               </Badge>
@@ -303,6 +313,85 @@ export default function Leads() {
             Exportar CSV
           </Button>
         </div>
+      </div>
+
+      {/* Metrics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Total de Leads</p>
+              <p className="text-2xl font-bold">{leads.length}</p>
+            </div>
+            <Users className="h-8 w-8 text-muted-foreground" />
+          </div>
+        </Card>
+        
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Novos Hoje</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {leads.filter(l => {
+                  const leadDate = new Date(l.created_at);
+                  const today = new Date();
+                  return leadDate.toDateString() === today.toDateString();
+                }).length}
+              </p>
+            </div>
+            <TrendingUp className="h-8 w-8 text-blue-600" />
+          </div>
+        </Card>
+        
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Novos</p>
+              <p className="text-2xl font-bold text-blue-500">
+                {leads.filter(l => l.status === 'new').length}
+              </p>
+            </div>
+            <Circle className="h-8 w-8 text-blue-500" />
+          </div>
+        </Card>
+        
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Contactados</p>
+              <p className="text-2xl font-bold text-yellow-600">
+                {leads.filter(l => l.status === 'contacted').length}
+              </p>
+            </div>
+            <Phone className="h-8 w-8 text-yellow-600" />
+          </div>
+        </Card>
+        
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Ganhos</p>
+              <p className="text-2xl font-bold text-green-600">
+                {leads.filter(l => l.status === 'won').length}
+              </p>
+            </div>
+            <CheckCircle className="h-8 w-8 text-green-600" />
+          </div>
+        </Card>
+        
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Taxa de Conversão</p>
+              <p className="text-2xl font-bold text-purple-600">
+                {leads.length > 0 
+                  ? ((leads.filter(l => l.status === 'won').length / leads.length) * 100).toFixed(1)
+                  : '0'}%
+              </p>
+            </div>
+            <Target className="h-8 w-8 text-purple-600" />
+          </div>
+        </Card>
       </div>
 
       {showFilters && (
@@ -334,6 +423,22 @@ export default function Leads() {
                   <SelectItem value="today">Hoje</SelectItem>
                   <SelectItem value="7days">Últimos 7 dias</SelectItem>
                   <SelectItem value="30days">Últimos 30 dias</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Origem</label>
+              <Select value={sourceFilter} onValueChange={setSourceFilter}>
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="hero_form">Formulário Hero</SelectItem>
+                  <SelectItem value="contact_form">Formulário de Contato</SelectItem>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="direct">Direto</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -415,6 +520,7 @@ export default function Leads() {
                 <TableHead>Nome</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Telefone</TableHead>
+                <TableHead>Origem</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Prioridade</TableHead>
                 <TableHead>Data</TableHead>
@@ -430,6 +536,14 @@ export default function Leads() {
                   <TableCell className="font-medium">{lead.name}</TableCell>
                   <TableCell>{lead.email}</TableCell>
                   <TableCell>{lead.phone || '-'}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {lead.source === 'hero_form' ? 'Hero' :
+                       lead.source === 'contact_form' ? 'Contato' :
+                       lead.source === 'whatsapp' ? 'WhatsApp' : 
+                       lead.source || '-'}
+                    </Badge>
+                  </TableCell>
                   <TableCell>
                     <Badge variant="secondary">
                       {COLUMNS.find(c => c.id === lead.status)?.title || lead.status}
