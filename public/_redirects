@@ -1,5 +1,5 @@
-# Proxy do sitemap - busca da edge function mas serve no domínio principal
+# Sitemap proxy
 /sitemap.xml https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap 200!
 
-# Redirect de www para domínio principal (opcional)
+# WWW redirect
 https://www.technedigital.com.br/* https://technedigital.com.br/:splat 301!
