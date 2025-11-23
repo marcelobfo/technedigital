@@ -30,6 +30,7 @@ import GoogleSearchConsole from "@/pages/admin/GoogleSearchConsole";
 import GoogleOAuthCallback from "@/pages/admin/GoogleOAuthCallback";
 import TermsOfService from "@/pages/TermsOfService";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import Sitemap from "@/pages/Sitemap";
 
 export const AppContent = () => {
   usePageTracking(); // ✅ Agora está dentro do Router context
@@ -44,6 +45,7 @@ export const AppContent = () => {
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
       <Route path="/contact" element={<Contact />} />
+      <Route path="/sitemap.xml" element={<Sitemap />} />
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/admin/login" element={<Login />} />

@@ -22,8 +22,8 @@ serve(async (req) => {
       throw new Error('Google Client ID não configurado');
     }
 
-    // URL de callback
-    const redirectUri = `${req.headers.get('origin') || 'https://technedigital.com.br'}/admin/google-callback`;
+    // URL de callback fixa para evitar problemas
+    const redirectUri = 'https://technedigital.com.br/admin/google-callback';
 
     // Scopes necessários para Google Search Console
     const scopes = [

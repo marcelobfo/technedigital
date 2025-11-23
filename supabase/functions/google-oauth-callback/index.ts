@@ -16,7 +16,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { code, origin } = await req.json();
+    const { code } = await req.json();
     
     const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
     const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
@@ -25,7 +25,8 @@ serve(async (req) => {
       throw new Error('Credenciais do Google não configuradas');
     }
 
-    const redirectUri = `${origin}/admin/google-callback`;
+    // URL de callback fixa
+    const redirectUri = 'https://technedigital.com.br/admin/google-callback';
 
     console.log('🔄 Trocando código por tokens...');
 
