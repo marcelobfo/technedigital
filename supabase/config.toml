@@ -18,5 +18,8 @@ verify_jwt = false
 [functions.fetch-indexing-status]
 verify_jwt = false
 
+[functions.test-google-connection]
+verify_jwt = false
+
 [functions.auto-submit-new-content]
 verify_jwt = false
