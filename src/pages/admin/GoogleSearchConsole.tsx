@@ -14,8 +14,20 @@ import {
   Send, 
   Search,
   AlertCircle,
-  AlertTriangle
+  AlertTriangle,
+  LogOut
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import AddUrlDialog from "@/components/admin/AddUrlDialog";
 import { toast } from "sonner";
 import {
@@ -162,6 +174,30 @@ const GoogleSearchConsole = () => {
     }
   });
 
+  // Desconectar
+  const disconnectMutation = useMutation({
+    mutationFn: async () => {
+      if (!settings?.id) throw new Error('Configuração não encontrada');
+      
+      const { error } = await supabase
+        .from('google_search_console_settings')
+        .delete()
+        .eq('id', settings.id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['google-search-console-settings'] });
+      toast.success('Desconectado com sucesso!', {
+        description: 'Você pode reconectar com outra conta do Google'
+      });
+    },
+    onError: (error) => {
+      console.error('Erro ao desconectar:', error);
+      toast.error('Erro ao desconectar');
+    }
+  });
+
   const getStatusBadge = (status: string) => {
     const statusMap: Record<string, { variant: any, text: string }> = {
       'SUBMITTED': { variant: 'secondary', text: 'Submetido' },
@@ -230,18 +266,56 @@ const GoogleSearchConsole = () => {
               </Button>
             </div>
           ) : (
-            <div className="space-y-2">
-              <p className="text-sm">
-                <strong>Propriedade:</strong> {settings.property_url}
-              </p>
-              {settings.last_sitemap_submit && (
-                <p className="text-sm text-muted-foreground">
-                  Última submissão do sitemap:{' '}
-                  {format(new Date(settings.last_sitemap_submit), "dd/MM/yyyy 'às' HH:mm", {
-                    locale: ptBR
-                  })}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm">
+                  <strong>Propriedade:</strong> {settings.property_url}
                 </p>
-              )}
+                {settings.last_sitemap_submit && (
+                  <p className="text-sm text-muted-foreground">
+                    Última submissão do sitemap:{' '}
+                    {format(new Date(settings.last_sitemap_submit), "dd/MM/yyyy 'às' HH:mm", {
+                      locale: ptBR
+                    })}
+                  </p>
+                )}
+              </div>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Desconectar
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Desconectar Google Search Console?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Isso irá remover a conexão com sua conta do Google. 
+                      Você precisará reconectar para continuar usando a integração.
+                      <br /><br />
+                      Os dados de indexação já coletados serão mantidos.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction 
+                      onClick={() => disconnectMutation.mutate()}
+                      disabled={disconnectMutation.isPending}
+                    >
+                      {disconnectMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Desconectando...
+                        </>
+                      ) : (
+                        'Desconectar'
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           )}
         </CardContent>
