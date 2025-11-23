@@ -1,4 +1,4 @@
-# Sitemap - PRIORIDADE MÁXIMA
+# Sitemap - direto para edge function
 /sitemap.xml https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap 200!
 
 # WWW redirect

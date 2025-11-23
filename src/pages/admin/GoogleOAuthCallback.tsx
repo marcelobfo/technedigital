@@ -34,8 +34,7 @@ const GoogleOAuthCallback = () => {
           'google-oauth-callback',
           {
             body: {
-              code,
-              origin: window.location.origin
+              code
             }
           }
         );

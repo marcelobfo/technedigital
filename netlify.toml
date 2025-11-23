@@ -2,7 +2,7 @@
   publish = "dist"
   command = "npm run build"
 
-# Redirect do sitemap - DEVE VIR PRIMEIRO
+# Sitemap - direto para edge function
 [[redirects]]
   from = "/sitemap.xml"
   to = "https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap"
