@@ -1,8 +1,8 @@
-# Sitemap - direto para edge function
-/sitemap.xml https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap 200!
-
-# WWW redirect
+# WWW redirect - PRIMEIRA
 https://www.technedigital.com.br/* https://technedigital.com.br/:splat 301!
+
+# Sitemap - PROXY direto (ANTES do SPA)
+/sitemap.xml https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap 200
 
 # SPA fallback - ÚLTIMA LINHA
 /*    /index.html   200
