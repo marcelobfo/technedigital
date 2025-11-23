@@ -61,16 +61,28 @@ export default function GoogleSearchConsoleWidget() {
       if (error) throw error;
 
       const total = data?.length || 0;
+      
+      // URLs que foram indexadas com sucesso
       const indexed = data?.filter(item => 
         item.indexing_status === 'URL_IS_ON_GOOGLE' || 
-        item.indexing_status === 'SUBMITTED'
+        item.indexing_status === 'SUBMITTED' ||
+        item.indexing_status === 'VALID'
       ).length || 0;
+      
+      // URLs aguardando rastreamento do Google
+      const pending = data?.filter(item => 
+        item.indexing_status === 'NEUTRAL' || 
+        item.indexing_status === 'UNKNOWN' ||
+        !item.indexing_status
+      ).length || 0;
+      
+      // URLs com erro real
       const errors = data?.filter(item => 
         item.indexing_status && 
-        !['URL_IS_ON_GOOGLE', 'SUBMITTED', 'UNKNOWN'].includes(item.indexing_status)
+        !['URL_IS_ON_GOOGLE', 'SUBMITTED', 'VALID', 'NEUTRAL', 'UNKNOWN'].includes(item.indexing_status)
       ).length || 0;
 
-      return { total, indexed, errors };
+      return { total, indexed, pending, errors };
     },
     enabled: !!settings?.is_active,
     refetchInterval: 60000,
@@ -369,7 +381,7 @@ export default function GoogleSearchConsoleWidget() {
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
               </div>
             ) : indexingStats ? (
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-2">
                 <div className="space-y-1 text-center p-3 bg-muted/50 rounded-lg">
                   <div className="text-2xl font-bold">{indexingStats.total}</div>
                   <div className="text-xs text-muted-foreground">URLs Total</div>
@@ -380,6 +392,13 @@ export default function GoogleSearchConsoleWidget() {
                     {indexingStats.indexed}
                   </div>
                   <div className="text-xs text-muted-foreground">Indexadas</div>
+                </div>
+                
+                <div className="space-y-1 text-center p-3 bg-yellow-500/10 rounded-lg">
+                  <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                    {indexingStats.pending}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Aguardando</div>
                 </div>
                 
                 <div className="space-y-1 text-center p-3 bg-destructive/10 rounded-lg">
