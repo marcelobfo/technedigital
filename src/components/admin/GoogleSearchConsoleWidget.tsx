@@ -143,12 +143,22 @@ export default function GoogleSearchConsoleWidget() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['seo-indexing-stats-widget'] });
-      toast.success('Status de indexação atualizado!');
+      
+      if (data.successCount > 0) {
+        toast.success(`${data.successCount} URLs verificadas com sucesso!`);
+      }
+      
+      if (data.errorCount > 0) {
+        toast.warning(`${data.errorCount} URLs com erro. Verifique os detalhes.`);
+      }
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao buscar status: ${error.message}`);
+      console.error('Erro ao buscar status:', error);
+      toast.error('Erro ao buscar status de indexação', {
+        description: error.message || 'Verifique sua conexão com Google'
+      });
     }
   });
 

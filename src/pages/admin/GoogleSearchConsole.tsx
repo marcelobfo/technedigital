@@ -13,8 +13,10 @@ import {
   RefreshCw, 
   Send, 
   Search,
-  AlertCircle
+  AlertCircle,
+  AlertTriangle
 } from "lucide-react";
+import AddUrlDialog from "@/components/admin/AddUrlDialog";
 import { toast } from "sonner";
 import {
   Table,
@@ -124,12 +126,22 @@ const GoogleSearchConsole = () => {
       return data;
     },
     onSuccess: (data) => {
-      toast.success(`Status verificado: ${data.totalChecked} URLs processadas`);
+      const successMsg = data.successCount 
+        ? `✅ ${data.successCount} URLs verificadas com sucesso`
+        : '';
+      const errorMsg = data.errorCount 
+        ? `⚠️ ${data.errorCount} URLs com erro`
+        : '';
+      
+      toast.success(`Status atualizado! ${successMsg} ${errorMsg}`);
       queryClient.invalidateQueries({ queryKey: ['seo-indexing-status'] });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Erro ao verificar status:', error);
-      toast.error('Erro ao verificar status de indexação');
+      const errorMessage = error?.message || 'Erro desconhecido ao verificar status';
+      toast.error(`Erro: ${errorMessage}`, {
+        description: 'Verifique os logs da edge function para mais detalhes'
+      });
     }
   });
 
@@ -288,7 +300,7 @@ const GoogleSearchConsole = () => {
                 Execute operações manualmente quando necessário
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Button
                   onClick={() => submitSitemapMutation.mutate()}
@@ -331,6 +343,24 @@ const GoogleSearchConsole = () => {
                   )}
                   Atualizar Tokens
                 </Button>
+              </div>
+
+              {checkStatusMutation.isError && (
+                <div className="flex items-start gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <AlertTriangle className="h-5 w-5 text-destructive mt-0.5" />
+                  <div className="flex-1 space-y-1">
+                    <p className="text-sm font-medium text-destructive">
+                      Erro ao verificar status
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Verifique se o access token está válido e se você tem permissões no Google Search Console
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-2">
+                <AddUrlDialog />
               </div>
             </CardContent>
           </Card>

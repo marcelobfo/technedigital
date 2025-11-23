@@ -60,22 +60,45 @@ serve(async (req) => {
   }
 
   try {
+    console.log('🚀 Iniciando fetch-indexing-status...');
+    
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    console.log('🔐 Obtendo access token...');
     const accessToken = await getValidAccessToken(supabase);
+    
+    if (!accessToken) {
+      console.error('❌ Access token não encontrado ou inválido');
+      throw new Error('Access token não encontrado. Verifique a conexão com Google.');
+    }
+    
+    console.log('✅ Access token válido obtido');
 
     // Buscar URLs para verificar
-    const { data: blogPosts } = await supabase
+    console.log('📚 Buscando URLs do banco de dados...');
+    const { data: blogPosts, error: blogError } = await supabase
       .from('blog_posts')
       .select('id, slug, status')
       .eq('status', 'published');
 
-    const { data: projects } = await supabase
+    if (blogError) {
+      console.error('❌ Erro ao buscar blog posts:', blogError);
+    } else {
+      console.log(`✅ ${blogPosts?.length || 0} blog posts encontrados`);
+    }
+
+    const { data: projects, error: projectsError } = await supabase
       .from('portfolio_projects')
       .select('id, slug, status')
       .eq('status', 'active');
+
+    if (projectsError) {
+      console.error('❌ Erro ao buscar projetos:', projectsError);
+    } else {
+      console.log(`✅ ${projects?.length || 0} projetos encontrados`);
+    }
 
     const urlsToCheck = [
       { url: 'https://technedigital.com.br', type: 'page', id: null },
@@ -96,12 +119,16 @@ serve(async (req) => {
       }))
     ];
 
-    console.log(`🔍 Verificando status de ${urlsToCheck.length} URLs...`);
+    console.log(`🔍 Total de ${urlsToCheck.length} URLs para verificar`);
 
     const results = [];
+    let successCount = 0;
+    let errorCount = 0;
 
     for (const item of urlsToCheck) {
       try {
+        console.log(`🌐 Verificando: ${item.url}`);
+        
         const response = await fetch(
           'https://searchconsole.googleapis.com/v1/urlInspection/index:inspect',
           {
@@ -117,34 +144,54 @@ serve(async (req) => {
           }
         );
 
-        if (response.ok) {
-          const data = await response.json();
-          const indexingStatus = data.inspectionResult?.indexStatusResult;
-
-          // Salvar/atualizar no banco
-          const { error } = await supabase
-            .from('seo_indexing_status')
-            .upsert({
-              url: item.url,
-              page_type: item.type,
-              reference_id: item.id,
-              indexing_status: indexingStatus?.verdict || 'UNKNOWN',
-              coverage_state: indexingStatus?.coverageState || null,
-              last_crawled: indexingStatus?.lastCrawlTime || null,
-              errors: indexingStatus?.errors || null,
-              warnings: indexingStatus?.warnings || null,
-              last_checked: new Date().toISOString(),
-            }, {
-              onConflict: 'url'
-            });
-
-          if (!error) {
-            results.push({ url: item.url, status: 'checked', verdict: indexingStatus?.verdict });
-          }
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`❌ Erro API Google (${response.status}): ${errorText}`);
+          errorCount++;
+          results.push({ 
+            url: item.url, 
+            status: 'error', 
+            error: `Google API error: ${response.status}` 
+          });
+          continue;
         }
+
+        const data = await response.json();
+        const indexingStatus = data.inspectionResult?.indexStatusResult;
+
+        console.log(`📊 Status obtido: ${indexingStatus?.verdict || 'UNKNOWN'}`);
+
+        // Salvar/atualizar no banco
+        const { error: dbError } = await supabase
+          .from('seo_indexing_status')
+          .upsert({
+            url: item.url,
+            page_type: item.type,
+            reference_id: item.id,
+            indexing_status: indexingStatus?.verdict || 'UNKNOWN',
+            coverage_state: indexingStatus?.coverageState || null,
+            last_crawled: indexingStatus?.lastCrawlTime || null,
+            errors: indexingStatus?.errors || null,
+            warnings: indexingStatus?.warnings || null,
+            last_checked: new Date().toISOString(),
+          }, {
+            onConflict: 'url'
+          });
+
+        if (dbError) {
+          console.error(`❌ Erro ao salvar no banco:`, dbError);
+          errorCount++;
+          results.push({ url: item.url, status: 'error', error: 'Erro ao salvar no banco' });
+        } else {
+          console.log(`✅ URL salva com sucesso`);
+          successCount++;
+          results.push({ url: item.url, status: 'checked', verdict: indexingStatus?.verdict });
+        }
+
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-        console.error(`Erro ao verificar ${item.url}:`, errorMessage);
+        console.error(`❌ Erro ao verificar ${item.url}:`, errorMessage);
+        errorCount++;
         results.push({ url: item.url, status: 'error', error: errorMessage });
       }
 
@@ -152,12 +199,17 @@ serve(async (req) => {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
 
-    console.log(`✅ Verificação concluída: ${results.length} URLs processadas`);
+    console.log(`✅ Verificação concluída:`);
+    console.log(`   - Total processadas: ${results.length}`);
+    console.log(`   - Sucesso: ${successCount}`);
+    console.log(`   - Erros: ${errorCount}`);
 
     return new Response(
       JSON.stringify({ 
         success: true,
         totalChecked: results.length,
+        successCount,
+        errorCount,
         results
       }),
       {
@@ -168,9 +220,15 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
-    console.error('❌ Erro ao buscar status de indexação:', error);
+    console.error('❌ Erro crítico ao buscar status de indexação:', error);
+    console.error('Stack trace:', error instanceof Error ? error.stack : 'N/A');
+    
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ 
+        success: false,
+        error: errorMessage,
+        details: error instanceof Error ? error.stack : undefined
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500,
