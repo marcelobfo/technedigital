@@ -162,6 +162,31 @@ export default function GoogleSearchConsoleWidget() {
     }
   });
 
+  const testConnectionMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('test-google-connection');
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success('Conexão funcionando corretamente!', {
+          description: `✅ Token válido | ✅ API acessível`
+        });
+      } else {
+        const errors = data.checks?.errors || [];
+        toast.error('Problemas na conexão detectados', {
+          description: errors.join(' | ')
+        });
+      }
+    },
+    onError: (error: Error) => {
+      toast.error('Erro ao testar conexão', {
+        description: error.message
+      });
+    }
+  });
+
   if (loadingSettings) {
     return (
       <Card>
@@ -213,14 +238,36 @@ export default function GoogleSearchConsoleWidget() {
             <div className="space-y-3 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
               <p className="text-sm font-medium flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-blue-600" />
-                Passos para configurar:
+                Configuração necessária no Google Cloud Console:
               </p>
-              <ol className="text-xs space-y-1.5 text-muted-foreground list-decimal list-inside">
-                <li>Configure OAuth 2.0 no Google Cloud Console</li>
-                <li>Adicione o redirect URI: <code className="text-xs bg-muted px-1 py-0.5 rounded">https://technedigital.com.br/admin/google-callback</code></li>
-                <li>Insira as credenciais usando o botão abaixo</li>
-                <li>Conecte sua conta do Google</li>
-              </ol>
+              <div className="space-y-3 text-xs">
+                <div>
+                  <p className="font-medium mb-1">1. Authorized redirect URIs:</p>
+                  <code className="block bg-muted/80 px-2 py-1.5 rounded text-xs break-all">
+                    https://technedigital.com.br/admin/google-callback
+                  </code>
+                </div>
+                <div>
+                  <p className="font-medium mb-1">2. Authorized JavaScript origins:</p>
+                  <code className="block bg-muted/80 px-2 py-1.5 rounded text-xs">
+                    https://technedigital.com.br
+                  </code>
+                </div>
+                <div>
+                  <p className="font-medium mb-1">3. Scopes necessários:</p>
+                  <ul className="list-disc list-inside text-muted-foreground space-y-0.5 ml-2">
+                    <li>https://www.googleapis.com/auth/webmasters</li>
+                    <li>https://www.googleapis.com/auth/webmasters.readonly</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium mb-1">4. Propriedade no Search Console:</p>
+                  <code className="block bg-muted/80 px-2 py-1.5 rounded text-xs">
+                    https://technedigital.com.br/
+                  </code>
+                  <p className="text-muted-foreground mt-1">⚠️ A barra no final é obrigatória</p>
+                </div>
+              </div>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -367,26 +414,47 @@ export default function GoogleSearchConsoleWidget() {
               </div>
             </div>
 
-            {indexingStats && indexingStats.total === 0 && (
+            <div className="flex gap-2">
               <Button 
-                variant="secondary" 
-                className="w-full"
-                onClick={() => fetchIndexingMutation.mutate()}
-                disabled={fetchIndexingMutation.isPending}
+                variant="outline" 
+                className="flex-1"
+                onClick={() => testConnectionMutation.mutate()}
+                disabled={testConnectionMutation.isPending}
               >
-                {fetchIndexingMutation.isPending ? (
+                {testConnectionMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Buscando Status...
+                    Testando...
                   </>
                 ) : (
                   <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Buscar Status de Indexação
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Testar Conexão
                   </>
                 )}
               </Button>
-            )}
+
+              {indexingStats && indexingStats.total === 0 && (
+                <Button 
+                  variant="secondary" 
+                  className="flex-1"
+                  onClick={() => fetchIndexingMutation.mutate()}
+                  disabled={fetchIndexingMutation.isPending}
+                >
+                  {fetchIndexingMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Buscar Status
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
 
             <Link to="/admin/google-search-console">
               <Button variant="outline" className="w-full">

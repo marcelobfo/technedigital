@@ -66,7 +66,7 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    console.log('🔐 Obtendo access token...');
+    console.log('🔐 Obtendo access token e configurações...');
     const accessToken = await getValidAccessToken(supabase);
     
     if (!accessToken) {
@@ -74,7 +74,15 @@ serve(async (req) => {
       throw new Error('Access token não encontrado. Verifique a conexão com Google.');
     }
     
-    console.log('✅ Access token válido obtido');
+    // Obter property_url do banco
+    const { data: settings } = await supabase
+      .from('google_search_console_settings')
+      .select('property_url')
+      .eq('is_active', true)
+      .single();
+    
+    const propertyUrl = settings?.property_url || 'https://technedigital.com.br/';
+    console.log(`✅ Configurações obtidas: property_url = ${propertyUrl}`);
 
     // Buscar URLs para verificar
     console.log('📚 Buscando URLs do banco de dados...');
@@ -129,6 +137,12 @@ serve(async (req) => {
       try {
         console.log(`🌐 Verificando: ${item.url}`);
         
+        const requestBody = {
+          inspectionUrl: item.url,
+          siteUrl: propertyUrl,
+        };
+        console.log(`📤 Request body:`, JSON.stringify(requestBody));
+        
         const response = await fetch(
           'https://searchconsole.googleapis.com/v1/urlInspection/index:inspect',
           {
@@ -137,21 +151,30 @@ serve(async (req) => {
               'Authorization': `Bearer ${accessToken}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              inspectionUrl: item.url,
-              siteUrl: 'https://technedigital.com.br',
-            }),
+            body: JSON.stringify(requestBody),
           }
         );
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error(`❌ Erro API Google (${response.status}): ${errorText}`);
+          console.error(`❌ Erro API Google (${response.status}) para ${item.url}:`);
+          console.error(`   Response: ${errorText}`);
+          
+          let errorMessage = `Google API error: ${response.status}`;
+          if (response.status === 403) {
+            errorMessage = 'Acesso negado. Verifique as permissões no Google Cloud Console.';
+          } else if (response.status === 401) {
+            errorMessage = 'Não autorizado. Token de acesso pode estar inválido.';
+          } else if (response.status === 404) {
+            errorMessage = 'Propriedade não encontrada no Search Console.';
+          }
+          
           errorCount++;
           results.push({ 
             url: item.url, 
             status: 'error', 
-            error: `Google API error: ${response.status}` 
+            error: errorMessage,
+            details: errorText
           });
           continue;
         }
