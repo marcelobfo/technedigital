@@ -2,18 +2,12 @@
   publish = "dist"
   command = "npm run build"
 
-# Sitemap - direto para edge function
+# Sitemap - proxy direto
 [[redirects]]
   from = "/sitemap.xml"
   to = "https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap"
-  status = 200
+  status = 200!
   force = true
-  
-[[headers]]
-  for = "/sitemap.xml"
-  [headers.values]
-    Content-Type = "application/xml"
-    Cache-Control = "public, max-age=3600"
 
 # WWW redirect
 [[redirects]]
