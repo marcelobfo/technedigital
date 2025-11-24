@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   CheckCircle2, 
   XCircle, 
@@ -15,7 +16,9 @@ import {
   Search,
   AlertCircle,
   AlertTriangle,
-  LogOut
+  LogOut,
+  Clock,
+  HelpCircle
 } from "lucide-react";
 import {
   AlertDialog,
@@ -44,6 +47,7 @@ import { ptBR } from "date-fns/locale";
 const GoogleSearchConsole = () => {
   const queryClient = useQueryClient();
   const [isConnecting, setIsConnecting] = useState(false);
+  const [selectedUrls, setSelectedUrls] = useState<string[]>([]);
 
   // Buscar configurações
   const { data: settings, isLoading: loadingSettings } = useQuery({
@@ -198,15 +202,91 @@ const GoogleSearchConsole = () => {
     }
   });
 
+  // Solicitar indexação de URLs selecionadas
+  const requestIndexingMutation = useMutation({
+    mutationFn: async ({ urls }: { urls: string[] }) => {
+      const { data, error } = await supabase.functions.invoke('request-url-indexing', {
+        body: { urls }
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['seo-indexing-status'] });
+      setSelectedUrls([]);
+      
+      const successMsg = `${data.successCount} URL${data.successCount !== 1 ? 's' : ''} solicitada${data.successCount !== 1 ? 's' : ''}`;
+      const errorMsg = data.errorCount > 0 
+        ? ` | ${data.errorCount} erro${data.errorCount !== 1 ? 's' : ''}`
+        : '';
+      
+      toast.success(`${successMsg} com sucesso!`, {
+        description: data.errorCount > 0 
+          ? `${errorMsg}. O Google processará em até 48 horas.`
+          : 'O Google processará a indexação em até 48 horas.'
+      });
+    },
+    onError: (error: any) => {
+      console.error('Erro ao solicitar indexação:', error);
+      toast.error('Erro ao solicitar indexação', {
+        description: error?.message || 'Verifique os logs da função'
+      });
+    }
+  });
+
+  // Handlers para seleção de URLs
+  const handleToggleUrl = (url: string) => {
+    setSelectedUrls(prev => 
+      prev.includes(url) 
+        ? prev.filter(u => u !== url)
+        : [...prev, url]
+    );
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked && indexingStatus) {
+      setSelectedUrls(indexingStatus.map((item: any) => item.url));
+    } else {
+      setSelectedUrls([]);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { variant: any, text: string }> = {
-      'SUBMITTED': { variant: 'secondary', text: 'Submetido' },
-      'URL_IS_ON_GOOGLE': { variant: 'default', text: 'Indexado' },
-      'UNKNOWN': { variant: 'outline', text: 'Desconhecido' },
+    const statusMap: Record<string, { variant: any, text: string, icon: any }> = {
+      'SUBMITTED': { 
+        variant: 'secondary', 
+        text: 'Solicitado', 
+        icon: <Send className="h-3 w-3" />
+      },
+      'URL_IS_ON_GOOGLE': { 
+        variant: 'default', 
+        text: 'Indexado', 
+        icon: <CheckCircle2 className="h-3 w-3" />
+      },
+      'VALID': { 
+        variant: 'default', 
+        text: 'Válido', 
+        icon: <CheckCircle2 className="h-3 w-3" />
+      },
+      'NEUTRAL': { 
+        variant: 'outline', 
+        text: 'Aguardando', 
+        icon: <Clock className="h-3 w-3" />
+      },
+      'UNKNOWN': { 
+        variant: 'outline', 
+        text: 'Desconhecido', 
+        icon: <HelpCircle className="h-3 w-3" />
+      },
     };
 
     const config = statusMap[status] || statusMap['UNKNOWN'];
-    return <Badge variant={config.variant}>{config.text}</Badge>;
+    return (
+      <Badge variant={config.variant} className="flex items-center gap-1">
+        {config.icon}
+        {config.text}
+      </Badge>
+    );
   };
 
   if (loadingSettings) {
@@ -453,38 +533,82 @@ const GoogleSearchConsole = () => {
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 </div>
               ) : indexingStatus && indexingStatus.length > 0 ? (
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>URL</TableHead>
-                        <TableHead>Tipo</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Última Verificação</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {indexingStatus.map((item: any) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium max-w-md truncate">
-                            {item.url}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">{item.page_type}</Badge>
-                          </TableCell>
-                          <TableCell>
-                            {getStatusBadge(item.indexing_status)}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {format(new Date(item.last_checked), 'dd/MM/yyyy HH:mm', {
-                              locale: ptBR
-                            })}
-                          </TableCell>
+                <>
+                  {/* Barra de ações com seleção */}
+                  <div className="flex items-center justify-between mb-4 p-4 bg-muted/50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      {selectedUrls.length > 0 && (
+                        <Badge variant="secondary" className="text-sm">
+                          {selectedUrls.length} URL{selectedUrls.length !== 1 ? 's' : ''} selecionada{selectedUrls.length !== 1 ? 's' : ''}
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <Button
+                      onClick={() => requestIndexingMutation.mutate({ urls: selectedUrls })}
+                      disabled={selectedUrls.length === 0 || requestIndexingMutation.isPending}
+                      size="sm"
+                    >
+                      {requestIndexingMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Solicitando...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="mr-2 h-4 w-4" />
+                          Solicitar Indexação ({selectedUrls.length})
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Tabela com checkboxes */}
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-12">
+                            <Checkbox 
+                              checked={selectedUrls.length === indexingStatus.length && indexingStatus.length > 0}
+                              onCheckedChange={handleSelectAll}
+                            />
+                          </TableHead>
+                          <TableHead>URL</TableHead>
+                          <TableHead>Tipo</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Última Verificação</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                      </TableHeader>
+                      <TableBody>
+                        {indexingStatus.map((item: any) => (
+                          <TableRow key={item.id}>
+                            <TableCell>
+                              <Checkbox 
+                                checked={selectedUrls.includes(item.url)}
+                                onCheckedChange={() => handleToggleUrl(item.url)}
+                              />
+                            </TableCell>
+                            <TableCell className="font-medium max-w-md truncate">
+                              {item.url}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">{item.page_type}</Badge>
+                            </TableCell>
+                            <TableCell>
+                              {getStatusBadge(item.indexing_status)}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {format(new Date(item.last_checked), 'dd/MM/yyyy HH:mm', {
+                                locale: ptBR
+                              })}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-8 text-muted-foreground">
                   <AlertCircle className="h-8 w-8 mx-auto mb-2" />

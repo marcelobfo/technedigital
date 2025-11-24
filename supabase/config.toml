@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.auto-submit-new-content]
 verify_jwt = false
+
+[functions.request-url-indexing]
+verify_jwt = false
