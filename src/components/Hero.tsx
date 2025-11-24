@@ -10,6 +10,7 @@ import Autoplay from 'embla-carousel-autoplay';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { LeadFormDialog } from '@/components/LeadFormDialog';
+import macbookFrame from '@/assets/macbook-frame.png';
 
 export function Hero() {
   const { t } = useLanguage();
@@ -94,80 +95,91 @@ export function Hero() {
 
             <div className="relative mx-auto max-w-5xl">
               {isLoading ? (
-                <Skeleton className="aspect-video rounded-2xl w-full" />
+                <div className="relative w-full">
+                  <img src={macbookFrame} alt="MacBook Frame" className="w-full h-auto" />
+                  <div className="absolute top-[3%] left-[12.5%] right-[12.5%] bottom-[28%]">
+                    <Skeleton className="w-full h-full rounded-lg" />
+                  </div>
+                </div>
               ) : projects && projects.length > 0 ? (
-                <div className="bg-card/50 backdrop-blur-sm rounded-2xl md:rounded-3xl p-4 md:p-6 lg:p-8 border border-border/50 shadow-2xl">
-                  <Carousel
-                    setApi={setApi}
-                    opts={{
-                      align: "start",
-                      loop: true,
-                    }}
-                    plugins={[
-                      Autoplay({
-                        delay: 5000,
-                      }),
-                    ]}
-                    className="w-full"
-                  >
-                    <CarouselContent>
-                      {projects.map((project) => (
-                        <CarouselItem key={project.id}>
-                          <Link to={`/portfolio/${project.slug}`} className="block group">
-                            <div className="relative aspect-[4/3] md:aspect-video rounded-xl md:rounded-2xl overflow-hidden border border-border/50 transition-all duration-500 group-hover:shadow-2xl group-hover:border-primary/50">
-                              {/* Badge Case de Sucesso */}
-                  <div className="absolute top-4 left-4 z-10">
-                  <div className="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-full bg-accent/10 text-accent text-[10px] md:text-xs font-semibold shadow-lg backdrop-blur-sm border border-accent/20">
-                    <Trophy className="w-2.5 h-2.5 md:w-3 md:h-3" />
-                    <span>Case de Sucesso</span>
-                  </div>
-                  </div>
-
-                              {project.cover_image ? (
-                                <img
-                                  src={project.cover_image}
-                                  alt={project.title}
-                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                />
-                              ) : (
-                                <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                                  <Sparkles className="w-16 h-16 text-muted-foreground" />
+                <div className="relative w-full">
+                  {/* MacBook Frame */}
+                  <img src={macbookFrame} alt="MacBook Frame" className="w-full h-auto relative z-10 pointer-events-none" />
+                  
+                  {/* Carousel dentro da tela do MacBook */}
+                  <div className="absolute top-[3%] left-[12.5%] right-[12.5%] bottom-[28%] overflow-hidden rounded-lg">
+                    <Carousel
+                      setApi={setApi}
+                      opts={{
+                        align: "start",
+                        loop: true,
+                      }}
+                      plugins={[
+                        Autoplay({
+                          delay: 5000,
+                        }),
+                      ]}
+                      className="w-full h-full"
+                    >
+                      <CarouselContent className="h-full">
+                        {projects.map((project) => (
+                          <CarouselItem key={project.id} className="h-full">
+                            <Link to={`/portfolio/${project.slug}`} className="block group h-full">
+                              <div className="relative w-full h-full">
+                                {/* Badge Case de Sucesso */}
+                                <div className="absolute top-2 left-2 md:top-4 md:left-4 z-10">
+                                  <div className="inline-flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-full bg-accent/10 text-accent text-[10px] md:text-xs font-semibold shadow-lg backdrop-blur-sm border border-accent/20">
+                                    <Trophy className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                                    <span>Case de Sucesso</span>
+                                  </div>
                                 </div>
-                              )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-black/30"></div>
-                              <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 lg:p-8 backdrop-blur-sm">
-                                <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-white mb-2 group-hover:text-primary-foreground transition-colors drop-shadow-lg">
-                                  {project.title}
-                                </h3>
-                                <p className="text-sm md:text-base text-white/90 line-clamp-2 drop-shadow-md">
-                                  {project.description}
-                                </p>
-                                {project.client_name && (
-                                  <p className="text-xs md:text-sm text-white/80 mt-2 drop-shadow-md">
-                                    Cliente: {project.client_name}
-                                  </p>
-                                )}
-                                {project.technologies && project.technologies.length > 0 && (
-                                  <div className="flex flex-wrap gap-1.5 md:gap-2 mt-2 md:mt-3">
-                                    {project.technologies.slice(0, 3).map((tech, idx) => (
-                                      <span
-                                        key={idx}
-                                        className="text-[10px] md:text-xs px-2 py-0.5 md:py-1 rounded-full bg-white/20 text-white backdrop-blur-sm border border-white/30"
-                                      >
-                                        {tech}
-                                      </span>
-                                    ))}
+
+                                {project.cover_image ? (
+                                  <img
+                                    src={project.cover_image}
+                                    alt={project.title}
+                                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                                    <Sparkles className="w-16 h-16 text-muted-foreground" />
                                   </div>
                                 )}
-                            </div>
-                          </div>
-                          </Link>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselPrevious className="left-1 md:left-2 lg:left-4 h-8 w-8 md:h-10 md:w-10 bg-background/80 backdrop-blur-md hover:bg-background border-border/50" />
-                    <CarouselNext className="right-1 md:right-2 lg:right-4 h-8 w-8 md:h-10 md:w-10 bg-background/80 backdrop-blur-md hover:bg-background border-border/50" />
-                  </Carousel>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-black/30"></div>
+                                <div className="absolute bottom-0 left-0 right-0 p-2 md:p-4 lg:p-6 backdrop-blur-sm">
+                                  <h3 className="text-sm md:text-lg lg:text-xl font-bold text-white mb-1 md:mb-2 group-hover:text-primary-foreground transition-colors drop-shadow-lg">
+                                    {project.title}
+                                  </h3>
+                                  <p className="text-xs md:text-sm text-white/90 line-clamp-2 drop-shadow-md">
+                                    {project.description}
+                                  </p>
+                                  {project.client_name && (
+                                    <p className="text-[10px] md:text-xs text-white/80 mt-1 md:mt-2 drop-shadow-md">
+                                      Cliente: {project.client_name}
+                                    </p>
+                                  )}
+                                  {project.technologies && project.technologies.length > 0 && (
+                                    <div className="flex flex-wrap gap-1 md:gap-1.5 mt-1 md:mt-2">
+                                      {project.technologies.slice(0, 3).map((tech, idx) => (
+                                        <span
+                                          key={idx}
+                                          className="text-[8px] md:text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 text-white backdrop-blur-sm border border-white/30"
+                                        >
+                                          {tech}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </Link>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      <CarouselPrevious className="left-1 md:left-2 h-6 w-6 md:h-8 md:w-8 bg-background/80 backdrop-blur-md hover:bg-background border-border/50" />
+                      <CarouselNext className="right-1 md:right-2 h-6 w-6 md:h-8 md:w-8 bg-background/80 backdrop-blur-md hover:bg-background border-border/50" />
+                    </Carousel>
+                  </div>
 
                   {/* Slide Indicators */}
                   {projects.length > 1 && (
