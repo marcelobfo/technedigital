@@ -97,7 +97,7 @@ export function Hero() {
               {isLoading ? (
                 <div className="relative w-full">
                   <img src={macbookFrame} alt="MacBook Frame" className="w-full h-auto" />
-                  <div className="absolute top-[3%] left-[12.5%] right-[12.5%] bottom-[28%]">
+                  <div className="absolute top-[5.5%] left-[12.5%] right-[12.5%] bottom-[23%]">
                     <Skeleton className="w-full h-full rounded-lg" />
                   </div>
                 </div>
@@ -107,7 +107,7 @@ export function Hero() {
                   <img src={macbookFrame} alt="MacBook Frame" className="w-full h-auto relative z-10 pointer-events-none" />
                   
                   {/* Carousel dentro da tela do MacBook */}
-                  <div className="absolute top-[3%] left-[12.5%] right-[12.5%] bottom-[28%] overflow-hidden rounded-lg">
+                  <div className="absolute top-[5.5%] left-[12.5%] right-[12.5%] bottom-[23%] overflow-hidden rounded-lg">
                     <Carousel
                       setApi={setApi}
                       opts={{
