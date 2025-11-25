@@ -50,6 +50,19 @@ export default function GoogleSearchConsoleWidget() {
     refetchInterval: 30000,
   });
 
+  // Verificar status da conexão e Indexing API
+  const { data: connectionStatus } = useQuery({
+    queryKey: ['google-connection-status-widget'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('test-google-connection');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!settings?.is_active,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnWindowFocus: false,
+  });
+
   // Buscar estatísticas de indexação
   const { data: indexingStats, isLoading: loadingStats } = useQuery({
     queryKey: ['seo-indexing-stats-widget'],
@@ -224,10 +237,18 @@ export default function GoogleSearchConsoleWidget() {
           <Search className="h-5 w-5" />
           Google Search Console
           {settings?.is_active && (
-            <Badge variant="default" className="ml-auto">
-              <CheckCircle2 className="h-3 w-3 mr-1" />
-              Conectado
-            </Badge>
+            <>
+              <Badge variant="default" className="ml-auto">
+                <CheckCircle2 className="h-3 w-3 mr-1" />
+                Conectado
+              </Badge>
+              {connectionStatus && !connectionStatus.checks?.indexingApiEnabled && (
+                <Badge variant="destructive" className="ml-2">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  API não habilitada
+                </Badge>
+              )}
+            </>
           )}
         </CardTitle>
         <CardDescription>
@@ -376,6 +397,34 @@ export default function GoogleSearchConsoleWidget() {
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Alerta de Indexing API não habilitada */}
+            {connectionStatus && !connectionStatus.checks?.indexingApiEnabled && (
+              <div className="flex items-start gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+                <div className="flex-1 space-y-1">
+                  <p className="text-xs font-medium text-destructive">Indexing API não habilitada</p>
+                  <p className="text-xs text-muted-foreground">
+                    Habilite a API para enviar URLs
+                  </p>
+                  <Button 
+                    asChild 
+                    variant="outline" 
+                    size="sm"
+                    className="mt-2 h-7 text-xs border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  >
+                    <a 
+                      href="https://console.developers.google.com/apis/api/indexing.googleapis.com/overview" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="mr-1 h-3 w-3" />
+                      Habilitar API
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {loadingStats ? (
               <div className="flex items-center justify-center py-4">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />

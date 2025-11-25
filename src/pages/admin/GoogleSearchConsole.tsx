@@ -18,7 +18,8 @@ import {
   AlertTriangle,
   LogOut,
   Clock,
-  HelpCircle
+  HelpCircle,
+  ExternalLink
 } from "lucide-react";
 import {
   AlertDialog,
@@ -31,6 +32,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import AddUrlDialog from "@/components/admin/AddUrlDialog";
 import { toast } from "sonner";
 import {
@@ -75,6 +77,19 @@ const GoogleSearchConsole = () => {
       if (error) throw error;
       return data || [];
     }
+  });
+
+  // Verificar status da conexão com Google
+  const { data: connectionStatus, isLoading: checkingConnection } = useQuery({
+    queryKey: ['google-connection-status'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('test-google-connection');
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!settings?.is_active,
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    refetchOnWindowFocus: false,
   });
 
   // Conectar com Google
@@ -400,6 +415,45 @@ const GoogleSearchConsole = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Alerta de Indexing API não habilitada */}
+      {settings?.is_active && connectionStatus && !connectionStatus.checks?.indexingApiEnabled && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Indexing API não habilitada</AlertTitle>
+          <AlertDescription className="space-y-2">
+            <p>
+              A API de Indexação do Google não está habilitada no seu projeto. 
+              Isso impede que as URLs sejam enviadas para indexação.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 mt-3">
+              <Button 
+                asChild 
+                variant="outline" 
+                size="sm"
+                className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <a 
+                  href="https://console.developers.google.com/apis/api/indexing.googleapis.com/overview" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Habilitar Indexing API
+                </a>
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => queryClient.invalidateQueries({ queryKey: ['google-connection-status'] })}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Verificar Novamente
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {settings?.is_active && (
         <>
