@@ -87,6 +87,8 @@ serve(async (req) => {
       propertyUrl: settings.property_url,
       tokenValid: false,
       apiAccessible: false,
+      indexingApiEnabled: false,
+      indexingApiEnableUrl: 'https://console.developers.google.com/apis/api/indexing.googleapis.com/overview',
       scopes: [],
       errors: [] as string[],
     };
@@ -136,7 +138,39 @@ serve(async (req) => {
         }
       }
 
-      // Passo 4: Verificar informações do token
+      // Passo 4: Testar Indexing API
+      console.log('🔗 Testando acesso à Indexing API...');
+      try {
+        const indexingTestResponse = await fetch(
+          'https://indexing.googleapis.com/v3/urlNotifications/metadata?url=' + encodeURIComponent(testUrl),
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (indexingTestResponse.ok) {
+          checks.indexingApiEnabled = true;
+          console.log('✅ Indexing API acessível');
+        } else if (indexingTestResponse.status === 403) {
+          const errorBody = await indexingTestResponse.json();
+          if (errorBody.error?.status === 'PERMISSION_DENIED') {
+            checks.errors.push('⚠️ Indexing API não habilitada. Habilite em: https://console.developers.google.com/apis/api/indexing.googleapis.com/overview');
+            console.error('❌ Indexing API não habilitada (PERMISSION_DENIED)');
+          } else {
+            checks.errors.push(`Erro na Indexing API (403): ${JSON.stringify(errorBody)}`);
+          }
+        } else {
+          const errorText = await indexingTestResponse.text();
+          console.error(`❌ Erro ao testar Indexing API (${indexingTestResponse.status}): ${errorText}`);
+        }
+      } catch (error) {
+        console.error('❌ Erro ao testar Indexing API:', error);
+        checks.errors.push('Erro ao verificar Indexing API');
+      }
+
+      // Passo 5: Verificar informações do token
       console.log('📋 Verificando informações do token...');
       const tokenInfoResponse = await fetch(
         `https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=${token}`
@@ -160,7 +194,8 @@ serve(async (req) => {
                       checks.hasClientSecret && 
                       checks.hasRefreshToken && 
                       checks.tokenValid && 
-                      checks.apiAccessible;
+                      checks.apiAccessible &&
+                      checks.indexingApiEnabled;
 
     console.log(`${allPassed ? '✅' : '❌'} Teste de conexão concluído`);
 
