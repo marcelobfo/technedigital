@@ -120,7 +120,7 @@ export function Hero() {
                                   </div>
                                 </div>
 
-                                {project.cover_image ? <img src={project.cover_image} alt={project.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                                {project.cover_image ? <img src={project.cover_image} alt={project.title} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                                     <Sparkles className="w-16 h-16 text-muted-foreground" />
                                   </div>}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-black/30"></div>
