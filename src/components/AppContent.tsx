@@ -24,6 +24,7 @@ import AdminSettings from "@/pages/admin/Settings";
 import Newsletter from "@/pages/admin/Newsletter";
 import SiteSettings from "@/pages/admin/SiteSettings";
 import WhatsAppSettings from "@/pages/admin/WhatsAppSettings";
+import EmailSettings from "@/pages/admin/EmailSettings";
 import Analytics from "@/pages/admin/Analytics";
 import Financial from "@/pages/admin/Financial";
 import GoogleSearchConsole from "@/pages/admin/GoogleSearchConsole";
@@ -66,6 +67,7 @@ export const AppContent = () => {
         <Route path="google-search-console" element={<GoogleSearchConsole />} />
         <Route path="site-settings" element={<SiteSettings />} />
         <Route path="whatsapp" element={<WhatsAppSettings />} />
+        <Route path="email" element={<EmailSettings />} />
         <Route path="settings" element={<AdminSettings />} />
       </Route>
       <Route path="*" element={<NotFound />} />
