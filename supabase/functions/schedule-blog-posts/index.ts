@@ -1,6 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
+// Declare EdgeRuntime for TypeScript
+declare const EdgeRuntime: {
+  waitUntil(promise: Promise<unknown>): void;
+};
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -31,6 +36,33 @@ const topicsByDay: Record<string, string[]> = {
   ]
 };
 
+// Função para gerar post em background (não bloqueia a resposta)
+async function generatePostInBackground(topic: string, supabaseUrl: string, supabaseServiceKey: string) {
+  console.log('🔄 [BACKGROUND] Iniciando geração para:', topic);
+  
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    const { data, error } = await supabase.functions.invoke('generate-blog-post', {
+      body: { topic }
+    });
+    
+    if (error) {
+      console.error('❌ [BACKGROUND] Erro na geração:', error);
+      return;
+    }
+    
+    console.log('✅ [BACKGROUND] Post gerado com sucesso:', JSON.stringify(data));
+  } catch (err) {
+    console.error('❌ [BACKGROUND] Exceção na geração:', err);
+  }
+}
+
+// Handler para quando a função vai encerrar
+addEventListener('beforeunload', (ev: any) => {
+  console.log('⚠️ [SHUTDOWN] Function encerrando devido a:', ev.detail?.reason || 'unknown');
+});
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -38,14 +70,14 @@ serve(async (req) => {
 
   try {
     const { day } = await req.json();
-    console.log('Schedule triggered for day:', day);
+    console.log('📅 Schedule triggered for day:', day);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Check if automation is enabled
-    console.log('Checking automation status...');
+    console.log('🔍 Checking automation status...');
     const { data: blogSettings, error: settingsError } = await supabase
       .from('blog_settings')
       .select('automation_enabled')
@@ -53,12 +85,12 @@ serve(async (req) => {
       .maybeSingle();
 
     if (settingsError) {
-      console.error('Error fetching settings:', settingsError);
+      console.error('❌ Error fetching settings:', settingsError);
       throw settingsError;
     }
 
     if (!blogSettings || !blogSettings.automation_enabled) {
-      console.log('Automation is disabled, skipping post generation');
+      console.log('⏸️ Automation is disabled, skipping post generation');
       return new Response(
         JSON.stringify({ 
           success: false,
@@ -69,7 +101,7 @@ serve(async (req) => {
       );
     }
 
-    console.log('Automation is enabled, proceeding with post generation');
+    console.log('✅ Automation is enabled, proceeding with post generation');
 
     // Select topic based on day of the week
     const dayKey = day.toLowerCase();
@@ -78,33 +110,32 @@ serve(async (req) => {
     // Randomly select a topic from the day's pool
     const selectedTopic = topics[Math.floor(Math.random() * topics.length)];
     
-    console.log('Selected topic:', selectedTopic);
+    console.log('📝 Selected topic:', selectedTopic);
 
-    // Call generate-blog-post function
-    const { data, error } = await supabase.functions.invoke('generate-blog-post', {
-      body: { topic: selectedTopic }
-    });
+    // Inicia a geração em BACKGROUND usando EdgeRuntime.waitUntil()
+    // Isso permite retornar resposta imediata ao cron enquanto o processo continua
+    console.log('🚀 Starting background generation (will not wait for completion)');
+    
+    EdgeRuntime.waitUntil(
+      generatePostInBackground(selectedTopic, supabaseUrl, supabaseServiceKey)
+    );
 
-    if (error) {
-      console.error('Error generating blog post:', error);
-      throw error;
-    }
-
-    console.log('Blog post generated successfully:', data);
-
-    // Log the success (optional: could save to a logs table)
+    // Retorna IMEDIATAMENTE ao cron (antes do timeout de 5s)
+    console.log('✅ Returning immediate response to cron job');
+    
     return new Response(
       JSON.stringify({ 
         success: true,
+        message: 'Post generation started in background',
         day: day,
         topic: selectedTopic,
-        result: data
+        note: 'Generation continues asynchronously'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('Error in schedule-blog-posts:', error);
+    console.error('❌ Error in schedule-blog-posts:', error);
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Unknown error',
