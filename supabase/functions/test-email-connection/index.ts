@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import nodemailer from "https://esm.sh/nodemailer@6.9.10";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -52,7 +52,7 @@ serve(async (req) => {
     }
 
     if (settings.provider === "smtp") {
-      // Test SMTP connection using nodemailer
+      // Test SMTP connection using denomailer
       if (!settings.smtp_host || !settings.smtp_user || !settings.smtp_password) {
         return new Response(
           JSON.stringify({ error: "Configurações SMTP incompletas. Verifique host, usuário e senha." }),
@@ -62,63 +62,63 @@ serve(async (req) => {
 
       console.log(`Testing SMTP connection to ${settings.smtp_host}:${settings.smtp_port}`);
 
-      const transporter = nodemailer.createTransport({
-        host: settings.smtp_host,
-        port: settings.smtp_port || 587,
-        secure: settings.smtp_secure || false,
-        auth: {
-          user: settings.smtp_user,
-          pass: settings.smtp_password,
-        },
-      } as any);
-
-      // Verify connection
-      try {
-        await transporter.verify();
-        console.log("SMTP connection verified");
-      } catch (verifyError: any) {
-        console.error("SMTP verification failed:", verifyError);
-        return new Response(
-          JSON.stringify({ error: `Falha na conexão SMTP: ${verifyError.message}` }),
-          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
-
-      // Send test email
       const fromName = settings.smtp_from_name || "Teste";
       const fromEmail = settings.smtp_from_email || settings.smtp_user;
 
-      console.log("Sending test email via SMTP to:", testEmail);
+      try {
+        const client = new SMTPClient({
+          connection: {
+            hostname: settings.smtp_host,
+            port: settings.smtp_port || 587,
+            tls: settings.smtp_secure || false,
+            auth: {
+              username: settings.smtp_user,
+              password: settings.smtp_password,
+            },
+          },
+        });
 
-      const info = await transporter.sendMail({
-        from: `${fromName} <${fromEmail}>`,
-        to: testEmail,
-        subject: "✅ Teste de Conexão - Email SMTP Configurado com Sucesso!",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h1 style="color: #22c55e;">✅ Conexão SMTP Estabelecida!</h1>
-            <p>Este é um email de teste para confirmar que as configurações SMTP estão funcionando corretamente.</p>
-            <hr style="border: 1px solid #e5e7eb; margin: 20px 0;">
-            <p style="color: #6b7280; font-size: 14px;">
-              Servidor SMTP: ${settings.smtp_host}:${settings.smtp_port}<br>
-              Remetente: ${fromName} &lt;${fromEmail}&gt;<br>
-              Conexão segura: ${settings.smtp_secure ? 'Sim (SSL/TLS)' : 'Não'}
-            </p>
-          </div>
-        `,
-      });
+        console.log("Sending test email via SMTP to:", testEmail);
 
-      console.log("SMTP email sent successfully:", info.messageId);
+        await client.send({
+          from: `${fromName} <${fromEmail}>`,
+          to: testEmail,
+          subject: "✅ Teste de Conexão - Email SMTP Configurado com Sucesso!",
+          content: "auto",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1 style="color: #22c55e;">✅ Conexão SMTP Estabelecida!</h1>
+              <p>Este é um email de teste para confirmar que as configurações SMTP estão funcionando corretamente.</p>
+              <hr style="border: 1px solid #e5e7eb; margin: 20px 0;">
+              <p style="color: #6b7280; font-size: 14px;">
+                Servidor SMTP: ${settings.smtp_host}:${settings.smtp_port}<br>
+                Remetente: ${fromName} &lt;${fromEmail}&gt;<br>
+                Conexão segura: ${settings.smtp_secure ? 'Sim (SSL/TLS)' : 'Não'}
+              </p>
+            </div>
+          `,
+        });
 
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: `Email de teste SMTP enviado com sucesso para ${testEmail}`,
-          provider: "smtp",
-          messageId: info.messageId
-        }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+        await client.close();
+
+        console.log("SMTP email sent successfully");
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: `Email de teste SMTP enviado com sucesso para ${testEmail}`,
+            provider: "smtp"
+          }),
+          { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+
+      } catch (smtpError: any) {
+        console.error("SMTP error:", smtpError);
+        return new Response(
+          JSON.stringify({ error: `Falha na conexão SMTP: ${smtpError.message}` }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
 
     } else if (settings.provider === "resend") {
       // Test Resend connection

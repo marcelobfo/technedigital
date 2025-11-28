@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import nodemailer from "https://esm.sh/nodemailer@6.9.10";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,28 +33,37 @@ async function sendEmailWithProvider(
   html: string
 ): Promise<{ success: boolean; response?: any; error?: string }> {
   if (settings.provider === "smtp") {
-    // Send via SMTP using nodemailer
-    const transporter = nodemailer.createTransport({
-      host: settings.smtp_host,
-      port: settings.smtp_port || 587,
-      secure: settings.smtp_secure || false,
-      auth: {
-        user: settings.smtp_user,
-        pass: settings.smtp_password,
+    // Send via SMTP using denomailer
+    const client = new SMTPClient({
+      connection: {
+        hostname: settings.smtp_host!,
+        port: settings.smtp_port || 587,
+        tls: settings.smtp_secure || false,
+        auth: {
+          username: settings.smtp_user!,
+          password: settings.smtp_password!,
+        },
       },
-    } as any);
+    });
 
     const fromName = settings.smtp_from_name || "TECHNE Digital";
     const fromEmail = settings.smtp_from_email || settings.smtp_user;
 
-    const info = await transporter.sendMail({
-      from: `${fromName} <${fromEmail}>`,
-      to: to,
-      subject: subject,
-      html: html,
-    });
+    try {
+      await client.send({
+        from: `${fromName} <${fromEmail}>`,
+        to: to,
+        subject: subject,
+        content: "auto",
+        html: html,
+      });
 
-    return { success: true, response: { messageId: info.messageId } };
+      await client.close();
+      return { success: true, response: { provider: "smtp" } };
+    } catch (err: any) {
+      await client.close();
+      throw err;
+    }
   } else {
     // Send via Resend
     const resendApiKey = settings.resend_api_key || Deno.env.get("RESEND_API_KEY");
