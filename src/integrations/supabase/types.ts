@@ -902,6 +902,50 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_logs: {
+        Row: {
+          api_response: Json | null
+          created_at: string
+          error_message: string | null
+          formatted_phone: string | null
+          id: string
+          lead_id: string | null
+          message_type: string
+          phone_number: string
+          status: string
+        }
+        Insert: {
+          api_response?: Json | null
+          created_at?: string
+          error_message?: string | null
+          formatted_phone?: string | null
+          id?: string
+          lead_id?: string | null
+          message_type?: string
+          phone_number: string
+          status?: string
+        }
+        Update: {
+          api_response?: Json | null
+          created_at?: string
+          error_message?: string | null
+          formatted_phone?: string | null
+          id?: string
+          lead_id?: string | null
+          message_type?: string
+          phone_number?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_logs_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       whatsapp_settings: {
         Row: {
           api_token: string

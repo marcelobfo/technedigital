@@ -19,7 +19,8 @@ import {
   MessageCircle,
   DollarSign,
   Search,
-  Send
+  Send,
+  FileText as FileLog
 } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
@@ -38,6 +39,7 @@ const navItems = [
   { icon: Users, label: 'Usuários', path: '/admin/users' },
   { icon: Globe, label: 'Configurações do Site', path: '/admin/site-settings' },
   { icon: MessageCircle, label: 'WhatsApp', path: '/admin/whatsapp' },
+  { icon: FileLog, label: 'Logs WhatsApp', path: '/admin/whatsapp/logs' },
   { icon: Send, label: 'Email', path: '/admin/email' },
   { icon: Wrench, label: 'Configurações', path: '/admin/settings' },
 ];
