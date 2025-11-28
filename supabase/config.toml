@@ -26,3 +26,9 @@ verify_jwt = false
 
 [functions.request-url-indexing]
 verify_jwt = false
+
+[functions.newsletter-subscribe]
+verify_jwt = false
+
+[functions.send-newsletter-post]
+verify_jwt = false

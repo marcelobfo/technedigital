@@ -284,6 +284,30 @@ Retorne APENAS JSON válido:
 
     console.log('Blog post created successfully:', postData.id);
 
+    // Step 7: Send newsletter to subscribers (in background)
+    console.log('Step 5: Triggering newsletter to subscribers...');
+    try {
+      const newsletterResponse = await fetch(`${supabaseUrl}/functions/v1/send-newsletter-post`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+        },
+        body: JSON.stringify({ post_id: postData.id }),
+      });
+
+      if (newsletterResponse.ok) {
+        const newsletterResult = await newsletterResponse.json();
+        console.log('Newsletter triggered successfully:', newsletterResult);
+      } else {
+        const errorText = await newsletterResponse.text();
+        console.error('Newsletter trigger failed:', newsletterResponse.status, errorText);
+      }
+    } catch (newsletterError) {
+      console.error('Error triggering newsletter:', newsletterError);
+      // Don't fail the post creation if newsletter fails
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
