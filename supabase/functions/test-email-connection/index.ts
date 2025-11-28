@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
+import nodemailer from "https://esm.sh/nodemailer@6.9.10";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,25 +39,94 @@ serve(async (req) => {
 
     console.log("Email provider:", settings.provider);
 
-    if (settings.provider === "resend") {
+    // Get authenticated user email to send test
+    const authHeader = req.headers.get("Authorization");
+    let testEmail = settings.smtp_from_email || settings.resend_from_email || "onboarding@resend.dev";
+
+    if (authHeader) {
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user } } = await supabase.auth.getUser(token);
+      if (user?.email) {
+        testEmail = user.email;
+      }
+    }
+
+    if (settings.provider === "smtp") {
+      // Test SMTP connection using nodemailer
+      if (!settings.smtp_host || !settings.smtp_user || !settings.smtp_password) {
+        return new Response(
+          JSON.stringify({ error: "Configurações SMTP incompletas. Verifique host, usuário e senha." }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      console.log(`Testing SMTP connection to ${settings.smtp_host}:${settings.smtp_port}`);
+
+      const transporter = nodemailer.createTransport({
+        host: settings.smtp_host,
+        port: settings.smtp_port || 587,
+        secure: settings.smtp_secure || false,
+        auth: {
+          user: settings.smtp_user,
+          pass: settings.smtp_password,
+        },
+      } as any);
+
+      // Verify connection
+      try {
+        await transporter.verify();
+        console.log("SMTP connection verified");
+      } catch (verifyError: any) {
+        console.error("SMTP verification failed:", verifyError);
+        return new Response(
+          JSON.stringify({ error: `Falha na conexão SMTP: ${verifyError.message}` }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      // Send test email
+      const fromName = settings.smtp_from_name || "Teste";
+      const fromEmail = settings.smtp_from_email || settings.smtp_user;
+
+      console.log("Sending test email via SMTP to:", testEmail);
+
+      const info = await transporter.sendMail({
+        from: `${fromName} <${fromEmail}>`,
+        to: testEmail,
+        subject: "✅ Teste de Conexão - Email SMTP Configurado com Sucesso!",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #22c55e;">✅ Conexão SMTP Estabelecida!</h1>
+            <p>Este é um email de teste para confirmar que as configurações SMTP estão funcionando corretamente.</p>
+            <hr style="border: 1px solid #e5e7eb; margin: 20px 0;">
+            <p style="color: #6b7280; font-size: 14px;">
+              Servidor SMTP: ${settings.smtp_host}:${settings.smtp_port}<br>
+              Remetente: ${fromName} &lt;${fromEmail}&gt;<br>
+              Conexão segura: ${settings.smtp_secure ? 'Sim (SSL/TLS)' : 'Não'}
+            </p>
+          </div>
+        `,
+      });
+
+      console.log("SMTP email sent successfully:", info.messageId);
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: `Email de teste SMTP enviado com sucesso para ${testEmail}`,
+          provider: "smtp",
+          messageId: info.messageId
+        }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+
+    } else if (settings.provider === "resend") {
       // Test Resend connection
       if (!settings.resend_api_key) {
         return new Response(
           JSON.stringify({ error: "API Key do Resend não configurada" }),
           { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
-      }
-
-      // Get authenticated user email to send test
-      const authHeader = req.headers.get("Authorization");
-      let testEmail = settings.resend_from_email || "onboarding@resend.dev";
-
-      if (authHeader) {
-        const token = authHeader.replace("Bearer ", "");
-        const { data: { user } } = await supabase.auth.getUser(token);
-        if (user?.email) {
-          testEmail = user.email;
-        }
       }
 
       console.log("Sending test email via Resend to:", testEmail);
@@ -103,25 +173,6 @@ serve(async (req) => {
           success: true, 
           message: `Email de teste enviado com sucesso para ${testEmail}`,
           provider: "resend"
-        }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-
-    } else if (settings.provider === "smtp") {
-      // For SMTP, validate settings exist
-      if (!settings.smtp_host || !settings.smtp_user || !settings.smtp_password) {
-        return new Response(
-          JSON.stringify({ error: "Configurações SMTP incompletas. Verifique host, usuário e senha." }),
-          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-        );
-      }
-
-      // Basic validation that settings exist
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: `Configurações SMTP verificadas: ${settings.smtp_host}:${settings.smtp_port}. Teste de envio SMTP em desenvolvimento.`,
-          provider: "smtp"
         }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );

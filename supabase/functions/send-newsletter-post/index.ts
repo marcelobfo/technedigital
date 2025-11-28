@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
+import nodemailer from "https://esm.sh/nodemailer@6.9.10";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +10,71 @@ const corsHeaders = {
 
 interface SendNewsletterRequest {
   post_id: string;
+}
+
+interface EmailSettings {
+  provider: string;
+  resend_api_key: string | null;
+  resend_from_email: string | null;
+  resend_from_name: string | null;
+  smtp_host: string | null;
+  smtp_port: number | null;
+  smtp_secure: boolean | null;
+  smtp_user: string | null;
+  smtp_password: string | null;
+  smtp_from_email: string | null;
+  smtp_from_name: string | null;
+}
+
+async function sendEmailWithProvider(
+  settings: EmailSettings,
+  to: string,
+  subject: string,
+  html: string
+): Promise<{ success: boolean; response?: any; error?: string }> {
+  if (settings.provider === "smtp") {
+    // Send via SMTP using nodemailer
+    const transporter = nodemailer.createTransport({
+      host: settings.smtp_host,
+      port: settings.smtp_port || 587,
+      secure: settings.smtp_secure || false,
+      auth: {
+        user: settings.smtp_user,
+        pass: settings.smtp_password,
+      },
+    } as any);
+
+    const fromName = settings.smtp_from_name || "TECHNE Digital";
+    const fromEmail = settings.smtp_from_email || settings.smtp_user;
+
+    const info = await transporter.sendMail({
+      from: `${fromName} <${fromEmail}>`,
+      to: to,
+      subject: subject,
+      html: html,
+    });
+
+    return { success: true, response: { messageId: info.messageId } };
+  } else {
+    // Send via Resend
+    const resendApiKey = settings.resend_api_key || Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      return { success: false, error: "Chave da API Resend não configurada" };
+    }
+
+    const resend = new Resend(resendApiKey);
+    const fromEmail = settings.resend_from_email || "onboarding@resend.dev";
+    const fromName = settings.resend_from_name || "TECHNE Digital";
+
+    const response = await resend.emails.send({
+      from: `${fromName} <${fromEmail}>`,
+      to: [to],
+      subject: subject,
+      html: html,
+    });
+
+    return { success: true, response };
+  }
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -61,19 +127,25 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get Resend API key from settings or env
-    const resendApiKey = emailSettings.resend_api_key || Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      console.error("RESEND_API_KEY not configured");
-      return new Response(
-        JSON.stringify({ error: "Chave da API Resend não configurada" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
+    console.log("Using email provider:", emailSettings.provider);
 
-    const resend = new Resend(resendApiKey);
-    const fromEmail = emailSettings.resend_from_email || "onboarding@resend.dev";
-    const fromName = emailSettings.resend_from_name || "TECHNE Digital";
+    // Validate provider configuration
+    if (emailSettings.provider === "smtp") {
+      if (!emailSettings.smtp_host || !emailSettings.smtp_user || !emailSettings.smtp_password) {
+        return new Response(
+          JSON.stringify({ error: "Configurações SMTP incompletas" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    } else {
+      const resendApiKey = emailSettings.resend_api_key || Deno.env.get("RESEND_API_KEY");
+      if (!resendApiKey) {
+        return new Response(
+          JSON.stringify({ error: "Chave da API Resend não configurada" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+    }
 
     // Fetch all active subscribers
     const { data: subscribers, error: subsError } = await supabase
@@ -164,26 +236,30 @@ const handler = async (req: Request): Promise<Response> => {
         .single();
 
       try {
-        const emailResponse = await resend.emails.send({
-          from: `${fromName} <${fromEmail}>`,
-          to: [subscriber.email],
-          subject: `📰 ${post.title}`,
-          html: emailHtml,
-        });
+        const result = await sendEmailWithProvider(
+          emailSettings as EmailSettings,
+          subscriber.email,
+          `📰 ${post.title}`,
+          emailHtml
+        );
 
-        console.log(`Email sent to ${subscriber.email}:`, emailResponse);
+        if (result.success) {
+          console.log(`Email sent to ${subscriber.email}:`, result.response);
 
-        // Update log with success
-        await supabase
-          .from("newsletter_logs")
-          .update({
-            status: "sent",
-            sent_at: new Date().toISOString(),
-            api_response: emailResponse,
-          })
-          .eq("id", logEntry?.id);
+          // Update log with success
+          await supabase
+            .from("newsletter_logs")
+            .update({
+              status: "sent",
+              sent_at: new Date().toISOString(),
+              api_response: result.response,
+            })
+            .eq("id", logEntry?.id);
 
-        sentCount++;
+          sentCount++;
+        } else {
+          throw new Error(result.error);
+        }
       } catch (emailError: any) {
         console.error(`Failed to send to ${subscriber.email}:`, emailError);
 
@@ -193,7 +269,7 @@ const handler = async (req: Request): Promise<Response> => {
           .update({
             status: "error",
             error_message: emailError.message || "Erro desconhecido",
-            api_response: { error: emailError.message, statusCode: emailError.statusCode },
+            api_response: { error: emailError.message },
           })
           .eq("id", logEntry?.id);
 
@@ -210,6 +286,7 @@ const handler = async (req: Request): Promise<Response> => {
         sent: sentCount,
         errors: errorCount,
         total: subscribers.length,
+        provider: emailSettings.provider,
       }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
