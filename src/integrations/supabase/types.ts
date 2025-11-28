@@ -416,6 +416,60 @@ export type Database = {
           },
         ]
       }
+      newsletter_logs: {
+        Row: {
+          api_response: Json | null
+          created_at: string
+          email: string
+          error_message: string | null
+          id: string
+          post_id: string | null
+          send_type: string
+          sent_at: string | null
+          status: string
+          subscriber_id: string | null
+        }
+        Insert: {
+          api_response?: Json | null
+          created_at?: string
+          email: string
+          error_message?: string | null
+          id?: string
+          post_id?: string | null
+          send_type?: string
+          sent_at?: string | null
+          status?: string
+          subscriber_id?: string | null
+        }
+        Update: {
+          api_response?: Json | null
+          created_at?: string
+          email?: string
+          error_message?: string | null
+          id?: string
+          post_id?: string | null
+          send_type?: string
+          sent_at?: string | null
+          status?: string
+          subscriber_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "newsletter_logs_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "blog_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "newsletter_logs_subscriber_id_fkey"
+            columns: ["subscriber_id"]
+            isOneToOne: false
+            referencedRelation: "newsletter_subscribers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string
