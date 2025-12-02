@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,35 +33,41 @@ async function sendEmailWithProvider(
   html: string
 ): Promise<{ success: boolean; response?: any; error?: string }> {
   if (settings.provider === "smtp") {
-    // Send via SMTP using denomailer
-    const client = new SMTPClient({
-      connection: {
-        hostname: settings.smtp_host!,
-        port: settings.smtp_port || 587,
-        tls: settings.smtp_secure || false,
-        auth: {
-          username: settings.smtp_user!,
-          password: settings.smtp_password!,
-        },
-      },
-    });
+    const client = new SmtpClient();
 
     const fromName = settings.smtp_from_name || "TECHNE Digital";
     const fromEmail = settings.smtp_from_email || settings.smtp_user;
 
     try {
+      // Connect based on port/security settings
+      if (settings.smtp_secure || settings.smtp_port === 465) {
+        await client.connectTLS({
+          hostname: settings.smtp_host!,
+          port: settings.smtp_port || 465,
+          username: settings.smtp_user!,
+          password: settings.smtp_password!,
+        });
+      } else {
+        await client.connect({
+          hostname: settings.smtp_host!,
+          port: settings.smtp_port || 587,
+          username: settings.smtp_user!,
+          password: settings.smtp_password!,
+        });
+      }
+
       await client.send({
         from: `${fromName} <${fromEmail}>`,
         to: to,
         subject: subject,
-        content: "auto",
+        content: html,
         html: html,
       });
 
       await client.close();
       return { success: true, response: { provider: "smtp" } };
     } catch (err: any) {
-      await client.close();
+      try { await client.close(); } catch {}
       throw err;
     }
   } else {
@@ -101,7 +107,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!email || !email.includes("@")) {
       return new Response(
-        JSON.stringify({ error: "Email inválido" }),
+        JSON.stringify({ error: "Email invalido" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -128,7 +134,7 @@ const handler = async (req: Request): Promise<Response> => {
         console.log("Subscription reactivated for:", email);
       } else {
         return new Response(
-          JSON.stringify({ error: "Email já está inscrito" }),
+          JSON.stringify({ error: "Email ja esta inscrito" }),
           { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
@@ -168,7 +174,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (!canSendEmail) {
       console.log("Email not configured, skipping welcome email");
       return new Response(
-        JSON.stringify({ success: true, message: "Inscrição realizada com sucesso!" }),
+        JSON.stringify({ success: true, message: "Inscricao realizada com sucesso!" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -231,27 +237,27 @@ const handler = async (req: Request): Promise<Response> => {
           </div>
           
           <div style="background: #f9fafb; padding: 30px; border-radius: 8px; margin-bottom: 30px;">
-            <h2 style="color: #1f2937; margin-top: 0;">Obrigado por se inscrever! 🎉</h2>
+            <h2 style="color: #1f2937; margin-top: 0;">Obrigado por se inscrever!</h2>
             <p style="color: #4b5563; font-size: 16px;">
-              Estamos felizes em ter você conosco! A partir de agora, você receberá nossas últimas novidades, 
+              Estamos felizes em ter voce conosco! A partir de agora, voce recebera nossas ultimas novidades, 
               dicas e insights sobre marketing digital, desenvolvimento web e tecnologia.
             </p>
           </div>
 
           ${recentPosts && recentPosts.length > 0 ? `
-            <h2 style="color: #1f2937; margin-bottom: 20px;">📚 Últimas Publicações</h2>
+            <h2 style="color: #1f2937; margin-bottom: 20px;">Ultimas Publicacoes</h2>
             <p style="color: #6b7280;">Confira nossos posts mais recentes:</p>
             ${postsHtml}
           ` : ""}
 
           <div style="margin-top: 40px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #9ca3af; font-size: 14px;">
             <p>
-              Você está recebendo este email porque se inscreveu na nossa newsletter.
+              Voce esta recebendo este email porque se inscreveu na nossa newsletter.
               <br>
-              <a href="${siteUrl}/unsubscribe" style="color: #667eea; text-decoration: none;">Cancelar inscrição</a>
+              <a href="${siteUrl}/unsubscribe" style="color: #667eea; text-decoration: none;">Cancelar inscricao</a>
             </p>
             <p style="margin-top: 10px;">
-              © ${new Date().getFullYear()} TECHNE Digital. Todos os direitos reservados.
+              ${new Date().getFullYear()} TECHNE Digital. Todos os direitos reservados.
             </p>
           </div>
         </body>
@@ -262,7 +268,7 @@ const handler = async (req: Request): Promise<Response> => {
       const result = await sendEmailWithProvider(
         emailSettings as EmailSettings,
         email,
-        "Bem-vindo à Newsletter da TECHNE Digital! 🚀",
+        "Bem-vindo a Newsletter da TECHNE Digital!",
         emailHtml
       );
 
@@ -298,13 +304,13 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: "Inscrição realizada com sucesso!" }),
+      JSON.stringify({ success: true, message: "Inscricao realizada com sucesso!" }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: any) {
     console.error("Error in newsletter-subscribe function:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Erro ao processar inscrição" }),
+      JSON.stringify({ error: error.message || "Erro ao processar inscricao" }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

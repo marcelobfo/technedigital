@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,7 +32,7 @@ serve(async (req) => {
     if (fetchError || !settings) {
       console.error("Error fetching settings:", fetchError);
       return new Response(
-        JSON.stringify({ error: "Configurações de email não encontradas" }),
+        JSON.stringify({ error: "Configuracoes de email nao encontradas" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -52,10 +52,10 @@ serve(async (req) => {
     }
 
     if (settings.provider === "smtp") {
-      // Test SMTP connection using denomailer
+      // Test SMTP connection using deno.land/x/smtp
       if (!settings.smtp_host || !settings.smtp_user || !settings.smtp_password) {
         return new Response(
-          JSON.stringify({ error: "Configurações SMTP incompletas. Verifique host, usuário e senha." }),
+          JSON.stringify({ error: "Configuracoes SMTP incompletas. Verifique host, usuario e senha." }),
           { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
@@ -66,37 +66,46 @@ serve(async (req) => {
       const fromEmail = settings.smtp_from_email || settings.smtp_user;
 
       try {
-        const client = new SMTPClient({
-          connection: {
+        const client = new SmtpClient();
+
+        // Connect based on port/security settings
+        if (settings.smtp_secure || settings.smtp_port === 465) {
+          await client.connectTLS({
+            hostname: settings.smtp_host,
+            port: settings.smtp_port || 465,
+            username: settings.smtp_user,
+            password: settings.smtp_password,
+          });
+        } else {
+          await client.connect({
             hostname: settings.smtp_host,
             port: settings.smtp_port || 587,
-            tls: settings.smtp_secure || false,
-            auth: {
-              username: settings.smtp_user,
-              password: settings.smtp_password,
-            },
-          },
-        });
+            username: settings.smtp_user,
+            password: settings.smtp_password,
+          });
+        }
 
         console.log("Sending test email via SMTP to:", testEmail);
+
+        const htmlContent = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #22c55e;">Conexao SMTP Estabelecida!</h1>
+            <p>Este e um email de teste para confirmar que as configuracoes SMTP estao funcionando corretamente.</p>
+            <hr style="border: 1px solid #e5e7eb; margin: 20px 0;">
+            <p style="color: #6b7280; font-size: 14px;">
+              Servidor SMTP: ${settings.smtp_host}:${settings.smtp_port}<br>
+              Remetente: ${fromName} &lt;${fromEmail}&gt;<br>
+              Conexao segura: ${settings.smtp_secure ? 'Sim (SSL/TLS)' : 'Nao'}
+            </p>
+          </div>
+        `;
 
         await client.send({
           from: `${fromName} <${fromEmail}>`,
           to: testEmail,
-          subject: "✅ Teste de Conexão - Email SMTP Configurado com Sucesso!",
-          content: "auto",
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h1 style="color: #22c55e;">✅ Conexão SMTP Estabelecida!</h1>
-              <p>Este é um email de teste para confirmar que as configurações SMTP estão funcionando corretamente.</p>
-              <hr style="border: 1px solid #e5e7eb; margin: 20px 0;">
-              <p style="color: #6b7280; font-size: 14px;">
-                Servidor SMTP: ${settings.smtp_host}:${settings.smtp_port}<br>
-                Remetente: ${fromName} &lt;${fromEmail}&gt;<br>
-                Conexão segura: ${settings.smtp_secure ? 'Sim (SSL/TLS)' : 'Não'}
-              </p>
-            </div>
-          `,
+          subject: "Teste de Conexao - Email SMTP Configurado com Sucesso!",
+          content: htmlContent,
+          html: htmlContent,
         });
 
         await client.close();
@@ -115,7 +124,7 @@ serve(async (req) => {
       } catch (smtpError: any) {
         console.error("SMTP error:", smtpError);
         return new Response(
-          JSON.stringify({ error: `Falha na conexão SMTP: ${smtpError.message}` }),
+          JSON.stringify({ error: `Falha na conexao SMTP: ${smtpError.message}` }),
           { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
@@ -124,7 +133,7 @@ serve(async (req) => {
       // Test Resend connection
       if (!settings.resend_api_key) {
         return new Response(
-          JSON.stringify({ error: "API Key do Resend não configurada" }),
+          JSON.stringify({ error: "API Key do Resend nao configurada" }),
           { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
@@ -141,15 +150,15 @@ serve(async (req) => {
         body: JSON.stringify({
           from: `${settings.resend_from_name || "Teste"} <${settings.resend_from_email || "onboarding@resend.dev"}>`,
           to: [testEmail],
-          subject: "✅ Teste de Conexão - Email Configurado com Sucesso!",
+          subject: "Teste de Conexao - Email Configurado com Sucesso!",
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <h1 style="color: #22c55e;">✅ Conexão Estabelecida!</h1>
-              <p>Este é um email de teste para confirmar que as configurações do Resend estão funcionando corretamente.</p>
+              <h1 style="color: #22c55e;">Conexao Estabelecida!</h1>
+              <p>Este e um email de teste para confirmar que as configuracoes do Resend estao funcionando corretamente.</p>
               <hr style="border: 1px solid #e5e7eb; margin: 20px 0;">
               <p style="color: #6b7280; font-size: 14px;">
                 Enviado via Resend API<br>
-                Remetente: ${settings.resend_from_name || "Não configurado"} &lt;${settings.resend_from_email || "onboarding@resend.dev"}&gt;
+                Remetente: ${settings.resend_from_name || "Nao configurado"} &lt;${settings.resend_from_email || "onboarding@resend.dev"}&gt;
               </p>
             </div>
           `,
@@ -179,14 +188,14 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ error: "Provedor de email não reconhecido" }),
+      JSON.stringify({ error: "Provedor de email nao reconhecido" }),
       { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
 
   } catch (error: any) {
     console.error("Error in test-email-connection:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Erro ao testar conexão de email" }),
+      JSON.stringify({ error: error.message || "Erro ao testar conexao de email" }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }

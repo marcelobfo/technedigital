@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,35 +33,41 @@ async function sendEmailWithProvider(
   html: string
 ): Promise<{ success: boolean; response?: any; error?: string }> {
   if (settings.provider === "smtp") {
-    // Send via SMTP using denomailer
-    const client = new SMTPClient({
-      connection: {
-        hostname: settings.smtp_host!,
-        port: settings.smtp_port || 587,
-        tls: settings.smtp_secure || false,
-        auth: {
-          username: settings.smtp_user!,
-          password: settings.smtp_password!,
-        },
-      },
-    });
+    const client = new SmtpClient();
 
     const fromName = settings.smtp_from_name || "Propostas";
     const fromEmail = settings.smtp_from_email || settings.smtp_user;
 
     try {
+      // Connect based on port/security settings
+      if (settings.smtp_secure || settings.smtp_port === 465) {
+        await client.connectTLS({
+          hostname: settings.smtp_host!,
+          port: settings.smtp_port || 465,
+          username: settings.smtp_user!,
+          password: settings.smtp_password!,
+        });
+      } else {
+        await client.connect({
+          hostname: settings.smtp_host!,
+          port: settings.smtp_port || 587,
+          username: settings.smtp_user!,
+          password: settings.smtp_password!,
+        });
+      }
+
       await client.send({
         from: `${fromName} <${fromEmail}>`,
         to: to,
         subject: subject,
-        content: "auto",
+        content: html,
         html: html,
       });
 
       await client.close();
       return { success: true, response: { provider: "smtp" } };
     } catch (err: any) {
-      await client.close();
+      try { await client.close(); } catch {}
       throw err;
     }
   } else {
@@ -107,7 +113,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!emailSettings) {
       return new Response(
-        JSON.stringify({ error: "Configurações de email não encontradas" }),
+        JSON.stringify({ error: "Configuracoes de email nao encontradas" }),
         { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
@@ -118,7 +124,7 @@ const handler = async (req: Request): Promise<Response> => {
     if (emailSettings.provider === "smtp") {
       if (!emailSettings.smtp_host || !emailSettings.smtp_user || !emailSettings.smtp_password) {
         return new Response(
-          JSON.stringify({ error: "Configurações SMTP incompletas" }),
+          JSON.stringify({ error: "Configuracoes SMTP incompletas" }),
           { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
@@ -126,7 +132,7 @@ const handler = async (req: Request): Promise<Response> => {
       const resendApiKey = emailSettings.resend_api_key || Deno.env.get("RESEND_API_KEY");
       if (!resendApiKey) {
         return new Response(
-          JSON.stringify({ error: "Chave da API Resend não configurada" }),
+          JSON.stringify({ error: "Chave da API Resend nao configurada" }),
           { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
@@ -186,13 +192,13 @@ const handler = async (req: Request): Promise<Response> => {
               <p>Proposta #${proposal.proposal_number}</p>
             </div>
             <div class="content">
-              <p>Olá <strong>${proposal.leads.name}</strong>,</p>
+              <p>Ola <strong>${proposal.leads.name}</strong>,</p>
               <p>Segue a proposta comercial conforme solicitado:</p>
               
               <table>
                 <thead>
                   <tr>
-                    <th>Serviço</th>
+                    <th>Servico</th>
                     <th style="text-align: center;">Qtd</th>
                     <th style="text-align: right;">Valor Unit.</th>
                     <th style="text-align: right;">Subtotal</th>
@@ -222,25 +228,25 @@ const handler = async (req: Request): Promise<Response> => {
 
               ${proposal.notes ? `
               <div style="margin: 20px 0; padding: 15px; background: #f9fafb; border-left: 4px solid #667eea;">
-                <strong>Observações:</strong><br>
+                <strong>Observacoes:</strong><br>
                 ${proposal.notes}
               </div>
               ` : ''}
 
               ${proposal.terms_and_conditions ? `
               <div style="margin: 20px 0; padding: 15px; background: #fef3c7; border-left: 4px solid #f59e0b;">
-                <strong>Termos e Condições:</strong><br>
+                <strong>Termos e Condicoes:</strong><br>
                 ${proposal.terms_and_conditions}
               </div>
               ` : ''}
 
               ${proposal.valid_until ? `
-              <p style="margin-top: 20px;"><em>Proposta válida até: ${new Date(proposal.valid_until).toLocaleDateString('pt-BR')}</em></p>
+              <p style="margin-top: 20px;"><em>Proposta valida ate: ${new Date(proposal.valid_until).toLocaleDateString('pt-BR')}</em></p>
               ` : ''}
             </div>
             <div class="footer">
               <p>Esta proposta foi gerada automaticamente.</p>
-              <p>Em caso de dúvidas, entre em contato conosco.</p>
+              <p>Em caso de duvidas, entre em contato conosco.</p>
             </div>
           </div>
         </body>
