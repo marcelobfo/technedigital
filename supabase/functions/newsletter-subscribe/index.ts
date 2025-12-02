@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import nodemailer from "https://esm.sh/nodemailer@6.9.10";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,45 +33,32 @@ async function sendEmailWithProvider(
   html: string
 ): Promise<{ success: boolean; response?: any; error?: string }> {
   if (settings.provider === "smtp") {
-    const client = new SmtpClient();
-
     const fromName = settings.smtp_from_name || "TECHNE Digital";
     const fromEmail = settings.smtp_from_email || settings.smtp_user;
 
     try {
-      // Connect based on port/security settings
-      if (settings.smtp_secure || settings.smtp_port === 465) {
-        await client.connectTLS({
-          hostname: settings.smtp_host!,
-          port: settings.smtp_port || 465,
-          username: settings.smtp_user!,
-          password: settings.smtp_password!,
-        });
-      } else {
-        await client.connect({
-          hostname: settings.smtp_host!,
-          port: settings.smtp_port || 587,
-          username: settings.smtp_user!,
-          password: settings.smtp_password!,
-        });
-      }
+      const transporter = nodemailer.createTransport({
+        host: settings.smtp_host!,
+        port: settings.smtp_port || 465,
+        secure: settings.smtp_secure || settings.smtp_port === 465,
+        auth: {
+          user: settings.smtp_user!,
+          pass: settings.smtp_password!,
+        },
+      });
 
-      await client.send({
+      const info = await transporter.sendMail({
         from: `${fromName} <${fromEmail}>`,
         to: to,
         subject: subject,
-        content: html,
         html: html,
       });
 
-      await client.close();
-      return { success: true, response: { provider: "smtp" } };
+      return { success: true, response: { provider: "smtp", messageId: info.messageId } };
     } catch (err: any) {
-      try { await client.close(); } catch {}
       throw err;
     }
   } else {
-    // Send via Resend
     const resendApiKey = settings.resend_api_key || Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       return { success: false, error: "Chave da API Resend não configurada" };
@@ -112,7 +99,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Check if email already exists
     const { data: existingSubscriber } = await supabase
       .from("newsletter_subscribers")
       .select("*")
@@ -123,7 +109,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (existingSubscriber) {
       if (existingSubscriber.status === "unsubscribed") {
-        // Reactivate subscription
         const { data: updated } = await supabase
           .from("newsletter_subscribers")
           .update({ status: "active", subscribed_at: new Date().toISOString(), unsubscribed_at: null })
@@ -139,7 +124,6 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
     } else {
-      // Insert new subscriber
       const { data: newSubscriber, error: insertError } = await supabase
         .from("newsletter_subscribers")
         .insert({ email })
@@ -154,14 +138,12 @@ const handler = async (req: Request): Promise<Response> => {
       console.log("New subscriber added:", email);
     }
 
-    // Fetch email settings
     const { data: emailSettings } = await supabase
       .from("email_settings")
       .select("*")
       .eq("is_active", true)
       .maybeSingle();
 
-    // Check if email can be sent
     let canSendEmail = false;
     if (emailSettings) {
       if (emailSettings.provider === "smtp") {
@@ -181,7 +163,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Using email provider:", emailSettings!.provider);
 
-    // Create pending log entry for welcome email
     const { data: logEntry } = await supabase
       .from("newsletter_logs")
       .insert({
@@ -193,7 +174,6 @@ const handler = async (req: Request): Promise<Response> => {
       .select()
       .single();
 
-    // Fetch recent published posts
     const { data: recentPosts } = await supabase
       .from("blog_posts")
       .select("title, slug, excerpt, cover_image, published_at")
@@ -201,7 +181,6 @@ const handler = async (req: Request): Promise<Response> => {
       .order("published_at", { ascending: false })
       .limit(3);
 
-    // Build email HTML with recent posts
     const siteUrl = "https://technedigital.com.br";
     let postsHtml = "";
     if (recentPosts && recentPosts.length > 0) {
@@ -275,7 +254,6 @@ const handler = async (req: Request): Promise<Response> => {
       if (result.success) {
         console.log("Welcome email sent successfully:", result.response);
 
-        // Update log with success
         await supabase
           .from("newsletter_logs")
           .update({
@@ -290,7 +268,6 @@ const handler = async (req: Request): Promise<Response> => {
     } catch (emailError: any) {
       console.error("Failed to send welcome email:", emailError);
 
-      // Update log with error
       await supabase
         .from("newsletter_logs")
         .update({
@@ -299,8 +276,6 @@ const handler = async (req: Request): Promise<Response> => {
           api_response: { error: emailError.message },
         })
         .eq("id", logEntry?.id);
-
-      // Don't fail the subscription, just log the email error
     }
 
     return new Response(

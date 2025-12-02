@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import nodemailer from "https://esm.sh/nodemailer@6.9.10";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -19,10 +18,8 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const { settingsId } = await req.json();
-
     console.log("Testing email connection for settings:", settingsId);
 
-    // Fetch email settings
     const { data: settings, error: fetchError } = await supabase
       .from("email_settings")
       .select("*")
@@ -39,7 +36,6 @@ serve(async (req) => {
 
     console.log("Email provider:", settings.provider);
 
-    // Get authenticated user email to send test
     const authHeader = req.headers.get("Authorization");
     let testEmail = settings.smtp_from_email || settings.resend_from_email || "onboarding@resend.dev";
 
@@ -52,7 +48,6 @@ serve(async (req) => {
     }
 
     if (settings.provider === "smtp") {
-      // Test SMTP connection using deno.land/x/smtp
       if (!settings.smtp_host || !settings.smtp_user || !settings.smtp_password) {
         return new Response(
           JSON.stringify({ error: "Configuracoes SMTP incompletas. Verifique host, usuario e senha." }),
@@ -66,24 +61,15 @@ serve(async (req) => {
       const fromEmail = settings.smtp_from_email || settings.smtp_user;
 
       try {
-        const client = new SmtpClient();
-
-        // Connect based on port/security settings
-        if (settings.smtp_secure || settings.smtp_port === 465) {
-          await client.connectTLS({
-            hostname: settings.smtp_host,
-            port: settings.smtp_port || 465,
-            username: settings.smtp_user,
-            password: settings.smtp_password,
-          });
-        } else {
-          await client.connect({
-            hostname: settings.smtp_host,
-            port: settings.smtp_port || 587,
-            username: settings.smtp_user,
-            password: settings.smtp_password,
-          });
-        }
+        const transporter = nodemailer.createTransport({
+          host: settings.smtp_host,
+          port: settings.smtp_port || 465,
+          secure: settings.smtp_secure || settings.smtp_port === 465,
+          auth: {
+            user: settings.smtp_user,
+            pass: settings.smtp_password,
+          },
+        });
 
         console.log("Sending test email via SMTP to:", testEmail);
 
@@ -100,15 +86,12 @@ serve(async (req) => {
           </div>
         `;
 
-        await client.send({
+        await transporter.sendMail({
           from: `${fromName} <${fromEmail}>`,
           to: testEmail,
           subject: "Teste de Conexao - Email SMTP Configurado com Sucesso!",
-          content: htmlContent,
           html: htmlContent,
         });
-
-        await client.close();
 
         console.log("SMTP email sent successfully");
 
@@ -130,7 +113,6 @@ serve(async (req) => {
       }
 
     } else if (settings.provider === "resend") {
-      // Test Resend connection
       if (!settings.resend_api_key) {
         return new Response(
           JSON.stringify({ error: "API Key do Resend nao configurada" }),
@@ -140,7 +122,6 @@ serve(async (req) => {
 
       console.log("Sending test email via Resend to:", testEmail);
 
-      // Use fetch to call Resend API directly
       const resendResponse = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
