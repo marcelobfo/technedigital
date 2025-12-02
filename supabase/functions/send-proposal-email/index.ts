@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import nodemailer from "https://esm.sh/nodemailer@6.9.10";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,45 +33,32 @@ async function sendEmailWithProvider(
   html: string
 ): Promise<{ success: boolean; response?: any; error?: string }> {
   if (settings.provider === "smtp") {
-    const client = new SmtpClient();
-
     const fromName = settings.smtp_from_name || "Propostas";
     const fromEmail = settings.smtp_from_email || settings.smtp_user;
 
     try {
-      // Connect based on port/security settings
-      if (settings.smtp_secure || settings.smtp_port === 465) {
-        await client.connectTLS({
-          hostname: settings.smtp_host!,
-          port: settings.smtp_port || 465,
-          username: settings.smtp_user!,
-          password: settings.smtp_password!,
-        });
-      } else {
-        await client.connect({
-          hostname: settings.smtp_host!,
-          port: settings.smtp_port || 587,
-          username: settings.smtp_user!,
-          password: settings.smtp_password!,
-        });
-      }
+      const transporter = nodemailer.createTransport({
+        host: settings.smtp_host!,
+        port: settings.smtp_port || 465,
+        secure: settings.smtp_secure || settings.smtp_port === 465,
+        auth: {
+          user: settings.smtp_user!,
+          pass: settings.smtp_password!,
+        },
+      });
 
-      await client.send({
+      const info = await transporter.sendMail({
         from: `${fromName} <${fromEmail}>`,
         to: to,
         subject: subject,
-        content: html,
         html: html,
       });
 
-      await client.close();
-      return { success: true, response: { provider: "smtp" } };
+      return { success: true, response: { provider: "smtp", messageId: info.messageId } };
     } catch (err: any) {
-      try { await client.close(); } catch {}
       throw err;
     }
   } else {
-    // Send via Resend
     const resendApiKey = settings.resend_api_key || Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       return { success: false, error: "Chave da API Resend não configurada" };
@@ -104,7 +91,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { proposal_id }: ProposalEmailRequest = await req.json();
 
-    // Fetch email settings
     const { data: emailSettings } = await supabase
       .from("email_settings")
       .select("*")
@@ -120,7 +106,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Using email provider:", emailSettings.provider);
 
-    // Validate provider configuration
     if (emailSettings.provider === "smtp") {
       if (!emailSettings.smtp_host || !emailSettings.smtp_user || !emailSettings.smtp_password) {
         return new Response(
@@ -138,7 +123,6 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Buscar proposta e itens
     const { data: proposal, error: proposalError } = await supabase
       .from("proposals")
       .select("*, leads(name, email)")
@@ -155,7 +139,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (itemsError) throw itemsError;
 
-    // Construir HTML do email
     const itemsHtml = items
       .map(
         (item: any) => `
@@ -253,7 +236,6 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Enviar email
     const result = await sendEmailWithProvider(
       emailSettings as EmailSettings,
       proposal.leads.email,
@@ -267,7 +249,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email sent successfully:", result.response);
 
-    // Atualizar proposta
     await supabase
       .from("proposals")
       .update({
@@ -278,7 +259,6 @@ const handler = async (req: Request): Promise<Response> => {
       })
       .eq("id", proposal_id);
 
-    // Get authenticated user
     const authHeader = req.headers.get("authorization");
     let userId = null;
     if (authHeader) {
@@ -287,7 +267,6 @@ const handler = async (req: Request): Promise<Response> => {
       userId = user?.id;
     }
 
-    // Log activity in lead
     if (userId) {
       await supabase.from("lead_activities").insert({
         lead_id: proposal.lead_id,
@@ -296,7 +275,6 @@ const handler = async (req: Request): Promise<Response> => {
         description: `Proposta comercial #${proposal.proposal_number} enviada por email para ${proposal.leads.email}`,
       });
 
-      // Update lead status
       await supabase
         .from("leads")
         .update({ status: "proposal_sent" })

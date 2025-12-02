@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+import nodemailer from "https://esm.sh/nodemailer@6.9.10";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,45 +33,32 @@ async function sendEmailWithProvider(
   html: string
 ): Promise<{ success: boolean; response?: any; error?: string }> {
   if (settings.provider === "smtp") {
-    const client = new SmtpClient();
-
     const fromName = settings.smtp_from_name || "TECHNE Digital";
     const fromEmail = settings.smtp_from_email || settings.smtp_user;
 
     try {
-      // Connect based on port/security settings
-      if (settings.smtp_secure || settings.smtp_port === 465) {
-        await client.connectTLS({
-          hostname: settings.smtp_host!,
-          port: settings.smtp_port || 465,
-          username: settings.smtp_user!,
-          password: settings.smtp_password!,
-        });
-      } else {
-        await client.connect({
-          hostname: settings.smtp_host!,
-          port: settings.smtp_port || 587,
-          username: settings.smtp_user!,
-          password: settings.smtp_password!,
-        });
-      }
+      const transporter = nodemailer.createTransport({
+        host: settings.smtp_host!,
+        port: settings.smtp_port || 465,
+        secure: settings.smtp_secure || settings.smtp_port === 465,
+        auth: {
+          user: settings.smtp_user!,
+          pass: settings.smtp_password!,
+        },
+      });
 
-      await client.send({
+      const info = await transporter.sendMail({
         from: `${fromName} <${fromEmail}>`,
         to: to,
         subject: subject,
-        content: html,
         html: html,
       });
 
-      await client.close();
-      return { success: true, response: { provider: "smtp" } };
+      return { success: true, response: { provider: "smtp", messageId: info.messageId } };
     } catch (err: any) {
-      try { await client.close(); } catch {}
       throw err;
     }
   } else {
-    // Send via Resend
     const resendApiKey = settings.resend_api_key || Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
       return { success: false, error: "Chave da API Resend não configurada" };
@@ -112,7 +99,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Fetch the blog post
     const { data: post, error: postError } = await supabase
       .from("blog_posts")
       .select("*")
@@ -127,7 +113,6 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Fetch email settings
     const { data: emailSettings } = await supabase
       .from("email_settings")
       .select("*")
@@ -144,7 +129,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Using email provider:", emailSettings.provider);
 
-    // Validate provider configuration
     if (emailSettings.provider === "smtp") {
       if (!emailSettings.smtp_host || !emailSettings.smtp_user || !emailSettings.smtp_password) {
         return new Response(
@@ -162,7 +146,6 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    // Fetch all active subscribers
     const { data: subscribers, error: subsError } = await supabase
       .from("newsletter_subscribers")
       .select("*")
@@ -183,7 +166,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Found ${subscribers.length} active subscribers`);
 
-    // Build email HTML
     const siteUrl = "https://technedigital.com.br";
     const postUrl = `${siteUrl}/blog/${post.slug}`;
     
@@ -232,12 +214,10 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    // Send emails to all subscribers and log results
     let sentCount = 0;
     let errorCount = 0;
 
     for (const subscriber of subscribers) {
-      // Create pending log entry
       const { data: logEntry } = await supabase
         .from("newsletter_logs")
         .insert({
@@ -261,7 +241,6 @@ const handler = async (req: Request): Promise<Response> => {
         if (result.success) {
           console.log(`Email sent to ${subscriber.email}:`, result.response);
 
-          // Update log with success
           await supabase
             .from("newsletter_logs")
             .update({
@@ -278,7 +257,6 @@ const handler = async (req: Request): Promise<Response> => {
       } catch (emailError: any) {
         console.error(`Failed to send to ${subscriber.email}:`, emailError);
 
-        // Update log with error
         await supabase
           .from("newsletter_logs")
           .update({
