@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
+import { Buffer } from "https://deno.land/std@0.168.0/node/buffer.ts";
+// @ts-ignore - polyfill for nodemailer
+globalThis.Buffer = Buffer;
 import nodemailer from "https://esm.sh/nodemailer@6.9.10";
 
 const corsHeaders = {
@@ -10,6 +13,7 @@ const corsHeaders = {
 
 interface SendNewsletterRequest {
   post_id: string;
+  test_email?: string; // Se fornecido, envia apenas para este email
 }
 
 interface EmailSettings {
@@ -104,8 +108,8 @@ const handler = async (req: Request): Promise<Response> => {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
-    const { post_id }: SendNewsletterRequest = await req.json();
-    console.log("Sending newsletter for post:", post_id);
+    const { post_id, test_email }: SendNewsletterRequest = await req.json();
+    console.log("Sending newsletter for post:", post_id, test_email ? `(test to: ${test_email})` : "(all subscribers)");
 
     if (!post_id) {
       return new Response(
@@ -161,25 +165,43 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const { data: subscribers, error: subsError } = await supabase
-      .from("newsletter_subscribers")
-      .select("*")
-      .eq("status", "active");
+    // Se test_email foi fornecido, enviar apenas para esse email
+    let subscribers: any[] = [];
+    if (test_email) {
+      const { data: testSub } = await supabase
+        .from("newsletter_subscribers")
+        .select("*")
+        .eq("email", test_email)
+        .maybeSingle();
+      
+      if (testSub) {
+        subscribers = [testSub];
+      } else {
+        // Criar subscriber temporário para teste
+        subscribers = [{ id: null, email: test_email }];
+      }
+    } else {
+      const { data: allSubs, error: subsError } = await supabase
+        .from("newsletter_subscribers")
+        .select("*")
+        .eq("status", "active");
 
-    if (subsError) {
-      console.error("Error fetching subscribers:", subsError);
-      throw subsError;
+      if (subsError) {
+        console.error("Error fetching subscribers:", subsError);
+        throw subsError;
+      }
+      subscribers = allSubs || [];
     }
 
-    if (!subscribers || subscribers.length === 0) {
-      console.log("No active subscribers found");
+    if (subscribers.length === 0) {
+      console.log("No subscribers to send to");
       return new Response(
-        JSON.stringify({ success: true, message: "Nenhum assinante ativo", sent: 0 }),
+        JSON.stringify({ success: true, message: "Nenhum assinante para enviar", sent: 0 }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    console.log(`Found ${subscribers.length} active subscribers`);
+    console.log(`Sending to ${subscribers.length} recipient(s)`);
 
     const siteUrl = "https://technedigital.com.br";
     const postUrl = `${siteUrl}/blog/${post.slug}`;
