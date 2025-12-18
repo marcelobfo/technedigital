@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.75.0";
+import { Buffer } from "https://deno.land/std@0.168.0/node/buffer.ts";
+// @ts-ignore - polyfill for nodemailer
+globalThis.Buffer = Buffer;
 import nodemailer from "https://esm.sh/nodemailer@6.9.10";
 
 const corsHeaders = {
