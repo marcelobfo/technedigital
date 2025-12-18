@@ -32,6 +32,13 @@ async function sendEmailWithProvider(
   subject: string,
   html: string
 ): Promise<{ success: boolean; response?: any; error?: string }> {
+  const text = html
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
   if (settings.provider === "smtp") {
     const fromName = settings.smtp_from_name || "TECHNE Digital";
     const fromEmail = settings.smtp_from_email || settings.smtp_user;
@@ -47,36 +54,43 @@ async function sendEmailWithProvider(
         },
       });
 
+      await transporter.verify();
+
       const info = await transporter.sendMail({
         from: `${fromName} <${fromEmail}>`,
-        to: to,
-        subject: subject,
-        html: html,
+        to,
+        subject,
+        text,
+        html,
+        headers: {
+          "X-Content-Type-Options": "nosniff",
+        },
       });
 
       return { success: true, response: { provider: "smtp", messageId: info.messageId } };
     } catch (err: any) {
-      throw err;
+      return { success: false, error: err?.message || "Falha ao enviar via SMTP" };
     }
-  } else {
-    const resendApiKey = settings.resend_api_key || Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      return { success: false, error: "Chave da API Resend não configurada" };
-    }
-
-    const resend = new Resend(resendApiKey);
-    const fromEmail = settings.resend_from_email || "onboarding@resend.dev";
-    const fromName = settings.resend_from_name || "TECHNE Digital";
-
-    const response = await resend.emails.send({
-      from: `${fromName} <${fromEmail}>`,
-      to: [to],
-      subject: subject,
-      html: html,
-    });
-
-    return { success: true, response };
   }
+
+  const resendApiKey = settings.resend_api_key || Deno.env.get("RESEND_API_KEY");
+  if (!resendApiKey) {
+    return { success: false, error: "Chave da API Resend não configurada" };
+  }
+
+  const resend = new Resend(resendApiKey);
+  const fromEmail = settings.resend_from_email || "onboarding@resend.dev";
+  const fromName = settings.resend_from_name || "TECHNE Digital";
+
+  const response = await resend.emails.send({
+    from: `${fromName} <${fromEmail}>`,
+    to: [to],
+    subject,
+    text,
+    html,
+  });
+
+  return { success: true, response };
 }
 
 const handler = async (req: Request): Promise<Response> => {
