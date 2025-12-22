@@ -48,6 +48,9 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
   const [cnpjData, setCnpjData] = useState<any>(null);
   const [loadingCnpj, setLoadingCnpj] = useState(false);
   const [cnpjError, setCnpjError] = useState('');
+  const [cpfData, setCpfData] = useState<any>(null);
+  const [loadingCpf, setLoadingCpf] = useState(false);
+  const [cpfError, setCpfError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -101,6 +104,52 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
       .substring(0, 15);
   };
 
+  const fetchCPFData = async (cpf: string) => {
+    const cleanCPF = cpf.replace(/\D/g, '');
+    
+    if (cleanCPF.length !== 11) {
+      setCpfError('CPF incompleto');
+      return;
+    }
+
+    setLoadingCpf(true);
+    setCpfError('');
+
+    try {
+      const { data, error } = await supabase.functions.invoke('fetch-cpf-data', {
+        body: { cpf: cleanCPF },
+      });
+
+      if (error) throw error;
+
+      if (!data.success) {
+        setCpfError(data.error || 'Erro ao consultar CPF');
+        setCpfData(null);
+        return;
+      }
+
+      setCpfData(data.data);
+
+      // Preencher nome automaticamente
+      if (data.data?.NOME) {
+        setFormData(prev => ({
+          ...prev,
+          name: data.data.NOME,
+        }));
+      }
+
+      toast({
+        title: 'CPF consultado!',
+        description: `Nome: ${data.data?.NOME || 'N/A'}`,
+      });
+    } catch (error) {
+      console.error('Erro ao buscar CPF:', error);
+      setCpfError('Erro ao consultar CPF');
+    } finally {
+      setLoadingCpf(false);
+    }
+  };
+
   const fetchCNPJData = async (cnpj: string) => {
     const cleanCNPJ = cnpj.replace(/\D/g, '');
     
@@ -149,7 +198,7 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
       }));
 
       toast({
-        title: 'CNPJ consultado! ✅',
+        title: 'CNPJ consultado!',
         description: `Empresa: ${data.razao_social}`,
       });
     } catch (error) {
@@ -170,6 +219,13 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
       const leadNotes = `Tipo: ${validatedData.personType === 'pessoa_fisica' ? 'Pessoa Física' : 'Empresa'}\n` +
         `${validatedData.personType === 'pessoa_fisica' ? `CPF: ${validatedData.cpf}` : `CNPJ: ${validatedData.cnpj}`}\n` +
         `Serviço de interesse: ${services?.find(s => s.id === validatedData.service)?.title || validatedData.service}` +
+        (cpfData ? `\n\n--- DADOS PESSOAIS (CPF) ---\n` +
+          `Nome: ${cpfData.NOME}\n` +
+          `CPF: ${cpfData.CPF}\n` +
+          `Sexo: ${cpfData.SEXO || 'N/A'}\n` +
+          `Data de Nascimento: ${cpfData.NASC || 'N/A'}\n` +
+          `Nome da Mãe: ${cpfData.NOME_MAE || 'N/A'}`
+        : '') +
         (cnpjData ? `\n\n--- DADOS DA EMPRESA (CNPJ) ---\n` +
           `Razão Social: ${cnpjData.razao_social}\n` +
           `Nome Fantasia: ${cnpjData.estabelecimento?.nome_fantasia || 'N/A'}\n` +
@@ -239,6 +295,8 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
       });
       setCnpjData(null);
       setCnpjError('');
+      setCpfData(null);
+      setCpfError('');
       setOpen(false);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -328,14 +386,43 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
           {formData.personType === 'pessoa_fisica' ? (
             <div className="space-y-2">
               <Label htmlFor="cpf">CPF *</Label>
-              <Input
-                id="cpf"
-                placeholder="000.000.000-00"
-                value={formData.cpf}
-                onChange={(e) => setFormData({ ...formData, cpf: formatCPF(e.target.value) })}
-                maxLength={14}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="cpf"
+                  placeholder="000.000.000-00"
+                  value={formData.cpf}
+                  onChange={(e) => {
+                    const formatted = formatCPF(e.target.value);
+                    setFormData({ ...formData, cpf: formatted });
+                    
+                    // Consultar API quando CPF estiver completo
+                    const clean = formatted.replace(/\D/g, '');
+                    if (clean.length === 11) {
+                      fetchCPFData(formatted);
+                    } else {
+                      setCpfData(null);
+                      setCpfError('');
+                    }
+                  }}
+                  maxLength={14}
+                  required
+                  disabled={loadingCpf}
+                />
+                {loadingCpf && (
+                  <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+              </div>
+              {cpfError && (
+                <p className="text-xs text-destructive">{cpfError}</p>
+              )}
+              {cpfData && (
+                <div className="text-xs text-muted-foreground space-y-1 mt-2 p-3 bg-muted/50 rounded-md border border-border">
+                  <p className="font-semibold text-foreground">{cpfData.NOME}</p>
+                  {cpfData.NASC && <p>Nascimento: {cpfData.NASC}</p>}
+                  {cpfData.SEXO && <p>Sexo: {cpfData.SEXO}</p>}
+                  <p className="text-[10px] text-muted-foreground/80 mt-1">Dados carregados automaticamente</p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="space-y-2">
