@@ -255,18 +255,15 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
           status: 'new',
           priority: 'medium',
           source: 'hero_form',
-        }])
-        .select()
-        .single();
+        }]);
 
       if (error) throw error;
 
-      // Enviar mensagem de boas-vindas via WhatsApp
-      if (lead && validatedData.phone) {
+      // Enviar mensagem de boas-vindas via WhatsApp (sem precisar do ID do lead)
+      if (validatedData.phone) {
         try {
           await supabase.functions.invoke('send-welcome-whatsapp', {
             body: {
-              lead_id: lead.id,
               phone_number: validatedData.phone.replace(/\D/g, ''),
               lead_name: validatedData.name,
             },
