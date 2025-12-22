@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.send-newsletter-post]
 verify_jwt = false
+
+[functions.fetch-cpf-data]
+verify_jwt = false
