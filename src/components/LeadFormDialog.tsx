@@ -108,7 +108,8 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
     const cleanCPF = cpf.replace(/\D/g, '');
     
     if (cleanCPF.length !== 11) {
-      setCpfError('CPF incompleto');
+      setCpfError('');
+      setCpfData(null);
       return;
     }
 
@@ -123,7 +124,8 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
       if (error) throw error;
 
       if (!data.success) {
-        setCpfError(data.error || 'Erro ao consultar CPF');
+        // Não mostrar erro para o usuário, apenas limpar dados
+        console.warn('CPF lookup failed:', data.error);
         setCpfData(null);
         return;
       }
@@ -136,15 +138,15 @@ export function LeadFormDialog({ trigger, defaultMessage = '' }: LeadFormDialogP
           ...prev,
           name: data.data.NOME,
         }));
+        toast({
+          title: 'Dados encontrados!',
+          description: `Nome: ${data.data.NOME}`,
+        });
       }
-
-      toast({
-        title: 'CPF consultado!',
-        description: `Nome: ${data.data?.NOME || 'N/A'}`,
-      });
     } catch (error) {
-      console.error('Erro ao buscar CPF:', error);
-      setCpfError('Erro ao consultar CPF');
+      console.warn('Erro ao buscar CPF:', error);
+      // Não bloqueia o formulário - apenas não preenche automaticamente
+      setCpfData(null);
     } finally {
       setLoadingCpf(false);
     }
