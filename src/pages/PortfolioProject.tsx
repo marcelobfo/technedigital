@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -83,6 +84,20 @@ export default function PortfolioProject() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>{project.title} | Portfólio - TECHNE Digital</title>
+        <meta name="description" content={project.description} />
+        <link rel="canonical" href={`https://technedigital.lovable.app/portfolio/${slug}`} />
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={`${project.title} | TECHNE Digital`} />
+        <meta property="og:description" content={project.description} />
+        <meta property="og:url" content={`https://technedigital.lovable.app/portfolio/${slug}`} />
+        {project.cover_image && <meta property="og:image" content={project.cover_image} />}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${project.title} | TECHNE Digital`} />
+        <meta name="twitter:description" content={project.description} />
+        {project.cover_image && <meta name="twitter:image" content={project.cover_image} />}
+      </Helmet>
       <Header />
       
       <main className="flex-1">

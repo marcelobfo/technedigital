@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import {
   Globe,
   Search,
@@ -88,6 +89,31 @@ const Services = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Serviços - TECHNE Digital | Marketing Digital, SEO, IA e Automação</title>
+        <meta name="description" content="Conheça nossos serviços: criação de sites, SEO, Google Ads, design, chatbots com IA, automação de marketing, produção de conteúdo e consultoria digital." />
+        <link rel="canonical" href="https://technedigital.lovable.app/services" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Serviços - TECHNE Digital" />
+        <meta property="og:description" content="Soluções completas em marketing digital, tecnologia e automação. Sites, SEO, Google Ads, IA e chatbots inteligentes." />
+        <meta property="og:url" content="https://technedigital.lovable.app/services" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Serviços - TECHNE Digital" />
+        <meta name="twitter:description" content="Soluções completas em marketing digital, tecnologia e automação. Sites, SEO, Google Ads, IA e chatbots inteligentes." />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "provider": {
+              "@type": "Organization",
+              "name": "TECHNE Digital",
+            },
+            "serviceType": "Marketing Digital, SEO, Criação de Sites, Automação, Inteligência Artificial",
+            "areaServed": "BR",
+            "description": "Soluções completas em marketing digital, tecnologia e automação.",
+          })}
+        </script>
+      </Helmet>
       <Header />
       <main className="flex-1">
         <section className="py-20 md:py-32" style={{ background: 'var(--gradient-hero)' }}>

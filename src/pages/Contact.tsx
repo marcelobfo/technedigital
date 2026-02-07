@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -125,6 +126,18 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Contato - TECHNE Digital | Fale Conosco</title>
+        <meta name="description" content="Entre em contato com a TECHNE Digital. Solicite um orçamento para marketing digital, criação de sites, SEO, automação e soluções com IA." />
+        <link rel="canonical" href="https://technedigital.lovable.app/contact" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Contato - TECHNE Digital" />
+        <meta property="og:description" content="Entre em contato com a TECHNE Digital. Solicite um orçamento para marketing digital, criação de sites, SEO e automação." />
+        <meta property="og:url" content="https://technedigital.lovable.app/contact" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Contato - TECHNE Digital" />
+        <meta name="twitter:description" content="Entre em contato com a TECHNE Digital. Solicite um orçamento para marketing digital, criação de sites, SEO e automação." />
+      </Helmet>
       <Header />
       <main className="flex-1">
         <section className="py-20 md:py-32" style={{ background: 'var(--gradient-hero)' }}>
