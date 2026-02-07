@@ -25,14 +25,49 @@ if (typeof globalThis.navigator === 'undefined') {
   globalThis.navigator = { language: 'pt-BR', userAgent: '' };
 }
 if (typeof globalThis.document === 'undefined') {
+  const createMockElement = () => ({
+    style: {},
+    setAttribute: () => {},
+    getAttribute: () => null,
+    removeAttribute: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    appendChild: () => {},
+    removeChild: () => {},
+    insertBefore: () => {},
+    classList: { add: () => {}, remove: () => {}, contains: () => false, toggle: () => {} },
+    childNodes: [],
+    children: [],
+    innerHTML: '',
+    textContent: '',
+    parentNode: null,
+    nodeType: 1,
+    nodeName: 'DIV',
+    ownerDocument: null,
+    dispatchEvent: () => true,
+    getBoundingClientRect: () => ({ top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 }),
+  });
+
   globalThis.document = {
     documentElement: {
-      classList: { add: () => {}, remove: () => {} },
+      classList: { add: () => {}, remove: () => {}, contains: () => false },
+      setAttribute: () => {},
+      getAttribute: () => null,
     },
     querySelector: () => null,
     querySelectorAll: () => [],
-    createElement: () => ({ style: {} }),
-    head: { appendChild: () => {} },
+    getElementById: () => null,
+    getElementsByTagName: () => [],
+    getElementsByClassName: () => [],
+    createElement: () => createMockElement(),
+    createElementNS: () => createMockElement(),
+    createTextNode: () => ({ nodeType: 3, textContent: '' }),
+    createComment: () => ({ nodeType: 8 }),
+    createDocumentFragment: () => ({ appendChild: () => {}, childNodes: [] }),
+    head: { appendChild: () => {}, removeChild: () => {}, insertBefore: () => {} },
+    body: { appendChild: () => {}, removeChild: () => {}, insertBefore: () => {} },
+    addEventListener: () => {},
+    removeEventListener: () => {},
   };
 }
 
