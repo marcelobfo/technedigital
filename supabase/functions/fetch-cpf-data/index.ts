@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const CPF_API_KEY = "efd727b7bf3925e6a1ec2d45079427f1";
+const CPF_API_KEY = Deno.env.get("CPF_API_KEY") || "";
 
 serve(async (req) => {
   // Handle CORS preflight
