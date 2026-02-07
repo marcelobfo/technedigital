@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Badge } from '@/components/ui/badge';
@@ -107,8 +108,65 @@ export default function BlogPost() {
 
   const authorName = (post.profiles as any)?.full_name || 'TECHNE Digital';
 
+  const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://technedigital.lovable.app';
+  const postUrl = `${siteUrl}/blog/${slug}`;
+  const publishDate = post.published_at || post.created_at;
+
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>{post.title} | TECHNE Digital Blog</title>
+        <meta name="description" content={post.excerpt || post.title} />
+        <meta name="keywords" content={post.tags?.join(', ') || post.category} />
+        <link rel="canonical" href={postUrl} />
+        
+        {/* Open Graph */}
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.excerpt || post.title} />
+        <meta property="og:url" content={postUrl} />
+        {post.cover_image && <meta property="og:image" content={post.cover_image} />}
+        <meta property="article:published_time" content={publishDate} />
+        <meta property="article:author" content={authorName} />
+        <meta property="article:section" content={post.category} />
+        {post.tags?.map((tag: string) => (
+          <meta key={tag} property="article:tag" content={tag} />
+        ))}
+        
+        {/* Twitter Card */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={post.title} />
+        <meta name="twitter:description" content={post.excerpt || post.title} />
+        {post.cover_image && <meta name="twitter:image" content={post.cover_image} />}
+
+        {/* JSON-LD Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            "headline": post.title,
+            "description": post.excerpt || post.title,
+            "image": post.cover_image || undefined,
+            "datePublished": publishDate,
+            "dateModified": post.updated_at || publishDate,
+            "author": {
+              "@type": "Organization",
+              "name": authorName,
+            },
+            "publisher": {
+              "@type": "Organization",
+              "name": "TECHNE Digital",
+            },
+            "mainEntityOfPage": {
+              "@type": "WebPage",
+              "@id": postUrl,
+            },
+            "articleSection": post.category,
+            "keywords": post.tags?.join(', ') || post.category,
+          })}
+        </script>
+      </Helmet>
+
       <Header />
       
       <main className="flex-1">
