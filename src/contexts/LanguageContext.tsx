@@ -243,6 +243,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [language, setLanguage] = useState<Language>(() => {
+    if (typeof window === 'undefined') return 'pt';
     const stored = localStorage.getItem('language');
     if (stored && ['pt', 'en', 'es'].includes(stored)) {
       return stored as Language;

@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Gera um ID único para o visitante (armazenado no localStorage)
 const getVisitorId = (): string => {
+  if (typeof window === 'undefined') return 'ssr_visitor';
   let visitorId = localStorage.getItem('visitor_id');
   if (!visitorId) {
     visitorId = `visitor_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
