@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Helmet } from 'react-helmet';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -31,6 +32,18 @@ export default function Blog() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Blog - TECHNE Digital | Artigos sobre Marketing Digital e Tecnologia</title>
+        <meta name="description" content="Leia nossos artigos sobre marketing digital, SEO, automação, inteligência artificial e tendências em tecnologia. Conteúdo atualizado para impulsionar seu negócio." />
+        <link rel="canonical" href="https://technedigital.lovable.app/blog" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Blog - TECHNE Digital" />
+        <meta property="og:description" content="Artigos sobre marketing digital, SEO, automação, inteligência artificial e tendências em tecnologia." />
+        <meta property="og:url" content="https://technedigital.lovable.app/blog" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Blog - TECHNE Digital" />
+        <meta name="twitter:description" content="Artigos sobre marketing digital, SEO, automação, inteligência artificial e tendências em tecnologia." />
+      </Helmet>
       <Header />
       <main className="flex-1">
         <section className="py-20 md:py-32" style={{ background: 'var(--gradient-hero)' }}>

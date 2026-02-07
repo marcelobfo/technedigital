@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -29,6 +30,18 @@ export default function Portfolio() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Portfólio - TECHNE Digital | Projetos e Cases de Sucesso</title>
+        <meta name="description" content="Veja nossos projetos e cases de sucesso em marketing digital, criação de sites, SEO e automação. Resultados reais para empresas reais." />
+        <link rel="canonical" href="https://technedigital.lovable.app/portfolio" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Portfólio - TECHNE Digital" />
+        <meta property="og:description" content="Veja nossos projetos e cases de sucesso em marketing digital, criação de sites, SEO e automação." />
+        <meta property="og:url" content="https://technedigital.lovable.app/portfolio" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Portfólio - TECHNE Digital" />
+        <meta name="twitter:description" content="Veja nossos projetos e cases de sucesso em marketing digital, criação de sites, SEO e automação." />
+      </Helmet>
       <Header />
       
       <main className="flex-1">

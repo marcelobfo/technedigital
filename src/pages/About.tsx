@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -9,6 +10,18 @@ const About = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <Helmet>
+        <title>Sobre Nós - TECHNE Digital | Agência de Marketing e Tecnologia</title>
+        <meta name="description" content="Conheça a TECHNE Digital: agência especializada em marketing digital, automação inteligente e soluções baseadas em inteligência artificial. Missão, visão e valores." />
+        <link rel="canonical" href="https://technedigital.lovable.app/about" />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Sobre Nós - TECHNE Digital" />
+        <meta property="og:description" content="Conheça a TECHNE Digital: agência especializada em marketing digital, automação inteligente e soluções baseadas em inteligência artificial." />
+        <meta property="og:url" content="https://technedigital.lovable.app/about" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Sobre Nós - TECHNE Digital" />
+        <meta name="twitter:description" content="Conheça a TECHNE Digital: agência especializada em marketing digital, automação inteligente e soluções baseadas em inteligência artificial." />
+      </Helmet>
       <Header />
       <main className="flex-1">
         <section className="py-20 md:py-32" style={{ background: 'var(--gradient-hero)' }}>
