@@ -3,6 +3,111 @@ import path from 'node:path'
 import url from 'node:url'
 
 // Polyfill browser globals for SSR/prerender in Node.js
+
+// Element class polyfill (needed by @hello-pangea/dnd and other DOM libs)
+if (typeof globalThis.Element === 'undefined') {
+  globalThis.Element = class Element {
+    constructor() {
+      this.style = {};
+      this.childNodes = [];
+      this.children = [];
+      this.innerHTML = '';
+      this.textContent = '';
+      this.parentNode = null;
+      this.nodeType = 1;
+      this.nodeName = 'DIV';
+      this.ownerDocument = null;
+    }
+    setAttribute() {}
+    getAttribute() { return null; }
+    removeAttribute() {}
+    addEventListener() {}
+    removeEventListener() {}
+    appendChild() {}
+    removeChild() {}
+    insertBefore() {}
+    dispatchEvent() { return true; }
+    getBoundingClientRect() { return { top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0 }; }
+    matches() { return false; }
+    closest() { return null; }
+    querySelectorAll() { return []; }
+    querySelector() { return null; }
+  };
+  // Add common methods to prototype so `name in Element.prototype` checks pass
+  Element.prototype.matches = Element.prototype.matches || function() { return false; };
+  Element.prototype.msMatchesSelector = Element.prototype.msMatchesSelector || function() { return false; };
+  Element.prototype.webkitMatchesSelector = Element.prototype.webkitMatchesSelector || function() { return false; };
+}
+
+if (typeof globalThis.HTMLElement === 'undefined') {
+  globalThis.HTMLElement = globalThis.Element;
+}
+
+if (typeof globalThis.Node === 'undefined') {
+  globalThis.Node = class Node {
+    constructor() {
+      this.nodeType = 1;
+    }
+  };
+  globalThis.Node.ELEMENT_NODE = 1;
+  globalThis.Node.TEXT_NODE = 3;
+  globalThis.Node.COMMENT_NODE = 8;
+  globalThis.Node.DOCUMENT_NODE = 9;
+}
+
+if (typeof globalThis.Event === 'undefined') {
+  globalThis.Event = class Event {
+    constructor(type) { this.type = type; }
+  };
+}
+
+if (typeof globalThis.CustomEvent === 'undefined') {
+  globalThis.CustomEvent = class CustomEvent extends globalThis.Event {
+    constructor(type, params = {}) {
+      super(type);
+      this.detail = params.detail || null;
+    }
+  };
+}
+
+if (typeof globalThis.MutationObserver === 'undefined') {
+  globalThis.MutationObserver = class MutationObserver {
+    constructor() {}
+    observe() {}
+    disconnect() {}
+    takeRecords() { return []; }
+  };
+}
+
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class ResizeObserver {
+    constructor() {}
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
+if (typeof globalThis.IntersectionObserver === 'undefined') {
+  globalThis.IntersectionObserver = class IntersectionObserver {
+    constructor() {}
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
+if (typeof globalThis.requestAnimationFrame === 'undefined') {
+  globalThis.requestAnimationFrame = (cb) => setTimeout(cb, 0);
+  globalThis.cancelAnimationFrame = (id) => clearTimeout(id);
+}
+
+if (typeof globalThis.getComputedStyle === 'undefined') {
+  globalThis.getComputedStyle = () => ({
+    getPropertyValue: () => '',
+  });
+}
+
 const noopStorage = {
   getItem: () => null,
   setItem: () => {},
