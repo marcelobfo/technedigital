@@ -15,4 +15,9 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  ssr: {
+    // Force these packages to be bundled in SSR build instead of externalized
+    // This ensures our browser polyfills in prerender.js take effect
+    noExternal: ['@hello-pangea/dnd'],
+  },
 }));
