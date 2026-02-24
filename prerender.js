@@ -206,3 +206,83 @@ for (const url of routesToPrerender) {
     console.warn(`Warning: Could not pre-render ${url}:`, e.message)
   }
 }
+
+// Generate dynamic sitemap.xml with blog posts and portfolio projects
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
+const baseUrl = 'https://technedigital.com.br';
+const today = new Date().toISOString().split('T')[0];
+
+async function generateSitemap() {
+  const staticUrls = [
+    { loc: baseUrl, priority: '1.0', changefreq: 'daily' },
+    { loc: `${baseUrl}/about`, priority: '0.8', changefreq: 'monthly' },
+    { loc: `${baseUrl}/services`, priority: '0.9', changefreq: 'weekly' },
+    { loc: `${baseUrl}/portfolio`, priority: '0.9', changefreq: 'weekly' },
+    { loc: `${baseUrl}/blog`, priority: '0.9', changefreq: 'daily' },
+    { loc: `${baseUrl}/contact`, priority: '0.8', changefreq: 'monthly' },
+    { loc: `${baseUrl}/privacy`, priority: '0.3', changefreq: 'yearly' },
+    { loc: `${baseUrl}/terms`, priority: '0.3', changefreq: 'yearly' },
+  ];
+
+  let blogUrls = [];
+  let portfolioUrls = [];
+
+  if (SUPABASE_URL && SUPABASE_KEY) {
+    try {
+      // Fetch published blog posts
+      const postsRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/blog_posts?select=slug,updated_at&status=eq.published&order=updated_at.desc`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      if (postsRes.ok) {
+        const posts = await postsRes.json();
+        blogUrls = posts.map(p => ({
+          loc: `${baseUrl}/blog/${p.slug}`,
+          lastmod: p.updated_at.split('T')[0],
+          priority: '0.7',
+          changefreq: 'monthly',
+        }));
+        console.log(`Sitemap: found ${blogUrls.length} blog posts`);
+      }
+
+      // Fetch active portfolio projects
+      const projRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/portfolio_projects?select=slug,created_at&status=eq.active&order=created_at.desc`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      if (projRes.ok) {
+        const projects = await projRes.json();
+        portfolioUrls = projects.map(p => ({
+          loc: `${baseUrl}/portfolio/${p.slug}`,
+          lastmod: p.created_at.split('T')[0],
+          priority: '0.7',
+          changefreq: 'monthly',
+        }));
+        console.log(`Sitemap: found ${portfolioUrls.length} portfolio projects`);
+      }
+    } catch (e) {
+      console.warn('Sitemap: could not fetch dynamic data:', e.message);
+    }
+  } else {
+    console.warn('Sitemap: no Supabase credentials, using static URLs only');
+  }
+
+  const allUrls = [...staticUrls, ...blogUrls, ...portfolioUrls];
+  let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+  for (const u of allUrls) {
+    xml += '  <url>\n';
+    xml += `    <loc>${u.loc}</loc>\n`;
+    xml += `    <lastmod>${u.lastmod || today}</lastmod>\n`;
+    xml += `    <changefreq>${u.changefreq}</changefreq>\n`;
+    xml += `    <priority>${u.priority}</priority>\n`;
+    xml += '  </url>\n';
+  }
+  xml += '</urlset>';
+
+  fs.writeFileSync(toAbsolute('dist/sitemap.xml'), xml);
+  console.log(`Sitemap generated: ${allUrls.length} URLs`);
+}
+
+await generateSitemap();
