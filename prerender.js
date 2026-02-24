@@ -182,25 +182,27 @@ const toAbsolute = (p) => path.resolve(__dirname, p)
 const template = fs.readFileSync(toAbsolute('dist/index.html'), 'utf-8')
 const { render } = await import('./dist/server/entry-server.js')
 
-const routesToPrerender = fs
-  .readdirSync(toAbsolute('src/pages'))
-  .filter((file) => file.endsWith('.tsx') && !file.startsWith('admin'))
-  .map((file) => {
-    const name = file.replace(/\.tsx$/, '').toLowerCase()
-    return name === 'index' ? `/` : `/${name}`
-  })
+// Only pre-render key static pages (skip dynamic routes that need DB data)
+const routesToPrerender = [
+  '/',
+  '/about',
+  '/services',
+  '/portfolio',
+  '/blog',
+  '/contact',
+  '/privacy',
+  '/terms',
+];
 
-;(async () => {
-  for (const url of routesToPrerender) {
-    try {
-      const appHtml = render(url);
-      const html = template.replace(`<!--app-html-->`, appHtml)
+for (const url of routesToPrerender) {
+  try {
+    const appHtml = render(url);
+    const html = template.replace(`<!--app-html-->`, appHtml)
 
-      const filePath = `dist${url === '/' ? '/index' : url}.html`
-      fs.writeFileSync(toAbsolute(filePath), html)
-      console.log('pre-rendered:', filePath)
-    } catch (e) {
-      console.warn(`Warning: Could not pre-render ${url}:`, e.message)
-    }
+    const filePath = `dist${url === '/' ? '/index' : url}.html`
+    fs.writeFileSync(toAbsolute(filePath), html)
+    console.log('pre-rendered:', filePath)
+  } catch (e) {
+    console.warn(`Warning: Could not pre-render ${url}:`, e.message)
   }
-})()
+}

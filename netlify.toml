@@ -2,13 +2,6 @@
   publish = "dist"
   command = "npm run build"
 
-# Sitemap - proxy direto
-[[redirects]]
-  from = "/sitemap.xml"
-  to = "https://nuqedbodehxicrtmgcnx.supabase.co/functions/v1/generate-sitemap"
-  status = 200!
-  force = true
-
 # WWW redirect
 [[redirects]]
   from = "https://www.technedigital.com.br/*"
